@@ -1,0 +1,151 @@
+.tiptap {
+  border-radius: 0 0 10px 10px;
+  padding: 10px;
+  background-color: #fff;
+  line-height: 1.5;
+
+  ul,
+  ol {
+    padding: 0 1rem;
+    margin: 1.25rem 1rem 1.25rem 0.4rem;
+
+    li p {
+      margin-top: 0.25em;
+      margin-bottom: 0.25em;
+    }
+  }
+
+  code {
+    background-color: #ededed;
+    border-radius: 0.4rem;
+    color: #000;
+    font-size: 0.85rem;
+    padding: 0.25em 0.3em;
+  }
+
+  pre {
+    background: black;
+    border-radius: 0.5rem;
+    color: white;
+    font-family: "JetBrainsMono", monospace;
+    margin: 1.5rem 0;
+    padding: 0.75rem 1rem;
+
+    code {
+      background: none;
+      color: inherit;
+      font-size: 0.8rem;
+      padding: 0;
+    }
+  }
+
+  blockquote {
+    border-left: 3px solid #9333ea;
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #9333ea;
+    margin: 2rem 0;
+  }
+}
+
+.create-post-title {
+  margin-bottom: 20px;
+}
+
+.title-input-root {
+  border-radius: 10px !important;
+}
+
+.title-input-root.title-input-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #9333ea !important;
+  border-width: 2px !important;
+}
+
+.create-post-container {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+  margin: 20px auto;
+  overflow: hidden;
+}
+
+.editor-container {
+  border: 1px solid #bbbcbd;
+  border-radius: 10px;
+  min-height: 200px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  margin-bottom: 10px;
+}
+
+.menu-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  background-color: #f1f1f1;
+  padding: 5px;
+  border-bottom: 1px solid #bbbcbd;
+}
+
+.menu-bar-buttons {
+  display: flex;
+  align-items: center;
+  border-right: 3px solid #d8d8d8;
+}
+
+.menu-bar button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  margin-right: 5px;
+  padding: 5px 10px;
+  font-size: 16px;
+}
+
+.menu-bar button:hover {
+  background-color: #e1e1e1;
+}
+
+.menu-bar button.is-active {
+  background-color: #d1d1d1;
+}
+
+.editor-content {
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.ProseMirror {
+  outline: none;
+  & > * {
+    &[style*="text-align: right"] {
+      text-align: right;
+    }
+    &[style*="text-align: center"] {
+      text-align: center;
+    }
+    &[style*="text-align: left"] {
+      text-align: left;
+    }
+    &[style*="text-align: justify"] {
+      text-align: justify;
+    }
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+  }
+}
+
+.post-button {
+  border-radius: 20px !important;
+}
