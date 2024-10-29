@@ -2,6 +2,7 @@ package backend.controller;
 
 import backend.dto.LoginDTO;
 import backend.dto.LoginResponseDTO;
+import backend.dto.ProfileResponseDTO;
 import backend.dto.UserDTO;
 import backend.repository.UserRepository;
 import backend.service.HomeService;
@@ -132,5 +133,13 @@ public class HomeController {
     }
 
 
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(@RequestParam Integer id) {
+        if (userRepository.existsById(id.longValue())) {
+            ProfileResponseDTO response = homeService.getProfile(id);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+    }
 
 }

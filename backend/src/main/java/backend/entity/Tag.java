@@ -26,5 +26,9 @@ public class Tag {
     @ManyToMany(mappedBy = "tags", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Blog> blogs;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     private Date createdTime;
 }

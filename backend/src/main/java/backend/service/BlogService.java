@@ -29,6 +29,7 @@ public class BlogService {
 
     @Autowired
     private TagRepository tagRepository;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -139,12 +140,15 @@ public class BlogService {
             response.setAuthor(blog.getUser().getUsername());
             response.setAuthorAvatar(blog.getUser().getAvatarData());
 
+            // get categories and tags name
             response.setCategories(blog.getCategories().stream().map(Category::getTitle).collect(Collectors.toList()));
             response.setTags(blog.getTags().stream().map(Tag::getTitle).collect(Collectors.toList()));
 
+            // count upVotes and downVotes
             response.setUpVotes((int) blog.getVotes().stream().filter(Vote::isUpVote).count());
             response.setDownVotes((int) blog.getVotes().stream().filter(vote -> !vote.isUpVote()).count());
 
+            // get comments
             response.setComments(blog.getComments().stream()
                     .map(comment -> {
                         CommentResponseDTO commentDTO = new CommentResponseDTO();
