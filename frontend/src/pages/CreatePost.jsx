@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   EditorProvider,
   useCurrentEditor,
@@ -11,8 +11,8 @@ import Code from "@tiptap/extension-code";
 import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
 import "./CreatePost.css";
-import { TextField, Button } from "@mui/material";
-
+import { TextField, Button, Autocomplete } from "@mui/material";
+import { getTags, getCategories, createPost } from "../api/blog";
 const extensions = [
   StarterKit,
   Superscript,
@@ -217,16 +217,105 @@ const MenuBar = () => {
 function CreatePost() {
   const [editorContent, setEditorContent] = useState("");
   const [title, setTitle] = useState("");
+  const [tags, setTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handlePost = () => {
-    console.log("Title:", title);
-    console.log("Content:", editorContent);
+  useEffect(() => {
+    getTags().then((response) => {
+      if (response.status === 200) {
+        setTags(response.data);
+      }
+    });
+    getCategories().then((response) => {
+      if (response.status === 200) {
+        setCategories(response.data);
+      }
+    });
+  }, []);
+
+  const handlePost = async () => {
+    if (!title.trim()) {
+      alert("Please enter a title");
+      return;
+    }
+
+    if (!editorContent.trim()) {
+      alert("Please add some content");
+      return;
+    }
+
+    if (selectedCategory.length === 0) {
+      alert("Please select at least one category");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const postData = {
+        title: title.trim(),
+        content: editorContent,
+        authorName:
+          localStorage.getItem("username") ||
+          sessionStorage.getItem("username"),
+        categories: selectedCategory.map((cat) => cat.title),
+        tags: selectedTags.map((tag) => tag.title),
+      };
+
+      const response = await createPost(postData);
+
+      if (response.status === 201) {
+        alert("Post created successfully!");
+        // Reset form
+        setTitle("");
+        setEditorContent("");
+        setSelectedCategory([]);
+        setSelectedTags([]);
+      } else {
+        alert("Failed to create post. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error creating post:", error);
+      alert("An error occurred while creating the post");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="create-post-container">
       <div className="title-bar mb-4">
         <h1>Create Post</h1>
+      </div>
+
+      <div className="mb-4">
+        <Autocomplete
+          multiple
+          options={categories}
+          getOptionLabel={(option) => option.title}
+          value={selectedCategory}
+          onChange={(event, newValue) => {
+            setSelectedCategory(newValue);
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Categories"
+              placeholder="Add categories"
+              InputProps={{
+                ...params.InputProps,
+                classes: {
+                  root: "title-input-root",
+                  focused: "title-input-focused",
+                },
+              }}
+              className="categories-field"
+            />
+          )}
+        />
       </div>
 
       <TextField
@@ -245,7 +334,7 @@ function CreatePost() {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-      <div className="editor-container">
+      <div className="editor-container mb-4">
         <EditorProvider
           slotBefore={<MenuBar />}
           extensions={extensions}
@@ -259,14 +348,44 @@ function CreatePost() {
         </EditorProvider>
       </div>
 
+      <div className="mb-4">
+        <Autocomplete
+          multiple
+          id="tags-outlined"
+          options={tags}
+          getOptionLabel={(option) => option.title}
+          filterSelectedOptions
+          value={selectedTags}
+          onChange={(event, newValue) => {
+            setSelectedTags(newValue);
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Tags"
+              placeholder="Add tags"
+              InputProps={{
+                ...params.InputProps,
+                classes: {
+                  root: "title-input-root",
+                  focused: "title-input-focused",
+                },
+              }}
+              className="create-post-title"
+            />
+          )}
+        />
+      </div>
+
       <div className="flex justify-end">
         <Button
           variant="contained"
           color="primary"
           className="post-button"
           onClick={handlePost}
+          disabled={isSubmitting}
         >
-          Post
+          {isSubmitting ? "Posting..." : "Post"}
         </Button>
       </div>
     </div>

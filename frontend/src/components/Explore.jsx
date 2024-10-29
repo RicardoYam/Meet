@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -12,6 +12,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import PostCard from "./PostCard";
 import { useNavigate } from "react-router-dom";
+import { getAllPosts } from "../api/blog";
 
 const UserProfile = ({ username, likes, comments, photos }) => {
   const navigate = useNavigate();
@@ -124,39 +125,78 @@ const FeaturedPost = ({ title, image }) => (
 );
 
 function Explore() {
-  const posts = [
-    {
-      username: "Cody Fisher",
-      handle: "codyfi2",
-      content:
-        "Hey guys, happy to share my shot that were taken my short trips all over europe. Of course, i tried both black and white film with bright 100 iso film. How do you like it?",
-      images: [
-        "https://source.unsplash.com/random/800x600?beach",
-        "https://source.unsplash.com/random/800x600?building",
-        "https://source.unsplash.com/random/800x600?landscape",
-        "https://source.unsplash.com/random/800x600?city",
-      ],
-      likes: 135,
-      comments: 35,
-    },
-    {
-      username: "Kathryn Murphy",
-      handle: "katmur",
-      content:
-        "Amazing walk today around Malaga. When it's summer I try to stay in the shadows of these trees, they seem to be natural AC :) How do you like my experiments with film soup?",
-      images: ["https://source.unsplash.com/random/800x600?trees"],
-      likes: 89,
-      comments: 12,
-    },
-  ];
+  const [posts, setPosts] = useState([]);
+  const [pageInfo, setPageInfo] = useState({
+    number: 0,
+    size: 5,
+    totalPages: 0,
+    totalElements: 0,
+    last: false,
+  });
+
+  useEffect(() => {
+    getAllPosts(0, 5).then((response) => {
+      if (response.status === 200) {
+        const data = response.data;
+        setPosts(data.content);
+        setPageInfo({
+          number: data.number,
+          size: data.size,
+          totalPages: data.totalPages,
+          totalElements: data.totalElements,
+          last: data.last,
+        });
+      }
+    });
+  }, []);
+
+  const loadMorePosts = () => {
+    if (!pageInfo.last) {
+      getAllPosts(pageInfo.number + 1, pageInfo.size).then((response) => {
+        if (response.status === 200) {
+          const data = response.data;
+          setPosts((prevPosts) => [...prevPosts, ...data.content]);
+          setPageInfo({
+            number: data.number,
+            size: data.size,
+            totalPages: data.totalPages,
+            totalElements: data.totalElements,
+            last: data.last,
+          });
+        }
+      });
+    }
+  };
 
   return (
     <Box className="container mx-auto px-4 py-8">
       <Box className="flex flex-col md:flex-row">
         <Box className="w-full md:w-2/3 md:pr-4">
-          {posts.map((post, index) => (
-            <PostCard key={index} {...post} />
+          {posts.map((post) => (
+            <PostCard
+              key={post.id}
+              id={post.id}
+              title={post.title}
+              content={post.content}
+              author={post.author}
+              avatar={post.avatar}
+              categories={post.categories}
+              tags={post.tags}
+              upVotes={post.upVotes}
+              comments={post.comments}
+              createdTime={post.createdTime}
+            />
           ))}
+          {!pageInfo.last && (
+            <Button
+              variant="contained"
+              onClick={loadMorePosts}
+              className="mt-4 bg-purple-600 hover:bg-purple-700"
+              fullWidth
+            >
+              Load More
+            </Button>
+          )}
         </Box>
         <Box className="w-full md:w-1/3 mt-4 md:mt-0">
           <UserProfile

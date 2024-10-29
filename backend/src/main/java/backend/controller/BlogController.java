@@ -1,9 +1,6 @@
 package backend.controller;
 
-import backend.dto.BlogDTO;
-import backend.dto.BlogResponseDTO;
-import backend.dto.CategoryDTO;
-import backend.dto.TagDTO;
+import backend.dto.*;
 import backend.repository.CategoryRepository;
 import backend.repository.TagRepository;
 import backend.service.BlogService;
@@ -16,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @RestController
@@ -58,6 +56,22 @@ public class BlogController {
         }
     }
 
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategoryResponseDTO>> getAllCategories() {
+        try {
+            List<CategoryResponseDTO> categories = blogService.getCategories();
+            if (categories.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(categories, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error(e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
     @PostMapping("/tags")
     public ResponseEntity<String> addTag(@RequestBody TagDTO tagDTO) {
         if (tagDTO.getTitle() == null || tagDTO.getTitle().isEmpty()) {
@@ -82,6 +96,22 @@ public class BlogController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         }
     }
+
+
+    @GetMapping("/tags")
+    public ResponseEntity<List<TagResponseDTO>> getAllTags() {
+        try {
+            List<TagResponseDTO> tags = blogService.getTags();
+            if (tags.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(tags, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error(e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     @PostMapping("/posts")
     public ResponseEntity<?> createBlog(@RequestBody BlogDTO blogDTO) {
@@ -108,14 +138,33 @@ public class BlogController {
         }
     }
 
+
     @GetMapping("/posts")
     public ResponseEntity<?> getAllBlogs(@RequestParam(defaultValue = "0") int page,
                                      @RequestParam(defaultValue = "5") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<BlogResponseDTO> blogs = blogService.getAllBlogs(pageable);
+        Page<BlogListResponseDTO> blogs = blogService.getAllBlogs(pageable);
         if (!blogs.hasContent()) {
             return new ResponseEntity<>("No blogs found", HttpStatus.NO_CONTENT);
         }
         return new ResponseEntity<>(blogs, HttpStatus.OK);
+    }
+
+    @GetMapping("/posts/{id}")
+    public ResponseEntity<?> getOneBlog(@PathVariable int id) {
+        if (id <= 0) {
+            return new ResponseEntity<>("Please provide a valid id", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            BlogResponseDTO blog = blogService.getOneBlog(id);
+            if (blog == null) {
+                return new ResponseEntity<>("Blog not found", HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<>(blog, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error(e);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

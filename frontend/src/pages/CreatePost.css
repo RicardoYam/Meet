@@ -54,10 +54,27 @@
 
 .create-post-title {
   margin-bottom: 20px;
+  background-color: white;
+  border-radius: 4px;
+}
+
+.categories-field {
+  max-width: 300px !important;
+}
+
+.categories-field .MuiOutlinedInput-root {
+  border-radius: 30px !important;
+  background-color: #eeeeee;
+}
+
+.categories-field .MuiAutocomplete-tag {
+  border-radius: 15px !important;
+  background-color: #fff;
 }
 
 .title-input-root {
   border-radius: 10px !important;
+  background-color: white;
 }
 
 .title-input-root.title-input-focused .MuiOutlinedInput-notchedOutline {

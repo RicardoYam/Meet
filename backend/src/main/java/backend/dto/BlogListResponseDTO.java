@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-public class BlogResponseDTO {
+public class BlogListResponseDTO {
 
     private Long id;
 
@@ -16,17 +16,15 @@ public class BlogResponseDTO {
 
     private String author;
 
-    private String authorAvatar;
-
-    private List<String> tags;
+    private String avatar;
 
     private List<String> categories;
 
+    private List<String> tags;
+
     private Integer upVotes;
 
-    private Integer downVotes;
-
-    private List<CommentResponseDTO> comments;
+    private Integer comments;
 
     private Date createdTime;
 }

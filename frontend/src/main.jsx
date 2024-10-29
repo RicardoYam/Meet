@@ -13,6 +13,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Explore from "./components/Explore";
 import Profile from "./pages/ProfilePage";
 import CreatePost from "./pages/CreatePost";
+import PostPage from "./pages/PostPage";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 createRoot(document.getElementById("root")).render(
@@ -26,6 +27,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/create-post" element={<CreatePost />} />
+          <Route path="/posts/:postId" element={<PostPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

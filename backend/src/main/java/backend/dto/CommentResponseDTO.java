@@ -6,11 +6,11 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-public class BlogResponseDTO {
+public class CommentResponseDTO {
 
     private Long id;
 
-    private String title;
+    private Long parentCommentId;
 
     private String content;
 
@@ -18,15 +18,11 @@ public class BlogResponseDTO {
 
     private String authorAvatar;
 
-    private List<String> tags;
-
-    private List<String> categories;
-
     private Integer upVotes;
 
     private Integer downVotes;
 
-    private List<CommentResponseDTO> comments;
+    private List<CommentResponseDTO> replies;
 
     private Date createdTime;
 }
