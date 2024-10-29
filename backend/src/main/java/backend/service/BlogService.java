@@ -2,10 +2,7 @@ package backend.service;
 
 import backend.dto.*;
 import backend.entity.*;
-import backend.repository.BlogRepository;
-import backend.repository.CategoryRepository;
-import backend.repository.TagRepository;
-import backend.repository.UserRepository;
+import backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +29,8 @@ public class BlogService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private VoteRepository voteRepository;
 
 
     public boolean createCategory(CategoryDTO categoryDTO) {
@@ -190,5 +189,22 @@ public class BlogService {
     }
 
 
+    @Transactional
+    public boolean upVoteBlog(Integer blogId, Integer userId) {
+        Long blogIdLong = blogId.longValue();
+        Long userIdLong = userId.longValue();
 
+        Vote vote = new Vote();
+        vote.setUpVote(true);
+
+        Optional<User> optionalUser = userRepository.findUserById(userIdLong);
+        Optional<Blog> optionalBlog = blogRepository.findById(blogIdLong);
+        optionalUser.ifPresent(vote::setUser);
+        optionalBlog.ifPresent(vote::setBlog);
+
+        vote.setCreatedTime(new Date());
+
+        voteRepository.save(vote);
+        return true;
+    }
 }

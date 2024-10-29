@@ -13,4 +13,6 @@ public interface BlogRepository extends JpaRepository<Blog, Integer> {
     Page<Blog> findAll(Pageable pageable);
 
     Optional<Blog> findById(Long id);
+
+    boolean existsById(Long id);
 }

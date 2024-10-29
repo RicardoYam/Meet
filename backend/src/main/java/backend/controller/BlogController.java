@@ -1,8 +1,10 @@
 package backend.controller;
 
 import backend.dto.*;
+import backend.repository.BlogRepository;
 import backend.repository.CategoryRepository;
 import backend.repository.TagRepository;
+import backend.repository.UserRepository;
 import backend.service.BlogService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,10 @@ public class BlogController {
 
     @Autowired
     private TagRepository tagRepository;
+    @Autowired
+    private BlogRepository blogRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/categories")
     public ResponseEntity<String> addCategory(@RequestBody CategoryDTO categoryDTO) {
@@ -162,6 +168,34 @@ public class BlogController {
                 return new ResponseEntity<>("Blog not found", HttpStatus.NOT_FOUND);
             }
             return new ResponseEntity<>(blog, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error(e);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @PostMapping("/vote")
+    public ResponseEntity<?> upVoteBlog(@RequestParam Integer blogId, @RequestParam Integer userId) {
+        if (blogId <= 0) {
+            return new ResponseEntity<>("Please provide a valid blogId", HttpStatus.BAD_REQUEST);
+        }
+        if (userId <= 0) {
+            return new ResponseEntity<>("Please provide a valid userId", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!blogRepository.existsById(blogId.longValue())) {
+            return new ResponseEntity<>("Blog not found", HttpStatus.NOT_FOUND);
+        }
+        if (!userRepository.existsById(userId.longValue())) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+
+        try {
+            if (blogService.upVoteBlog(blogId, userId)) {
+                return new ResponseEntity<>("Blog upvoted", HttpStatus.OK);
+            }
+            return new ResponseEntity<>("Blog not upvoted", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             log.error(e);
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
