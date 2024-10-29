@@ -32,5 +32,7 @@ public class Vote {
     @JoinColumn(name = "comment_id") // Foreign key for Comment
     private Comment comment;
 
+    private boolean status;
+
     private Date createdTime; // Date when the vote was created
 }

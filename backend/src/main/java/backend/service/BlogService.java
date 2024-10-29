@@ -144,8 +144,8 @@ public class BlogService {
             response.setTags(blog.getTags().stream().map(Tag::getTitle).collect(Collectors.toList()));
 
             // count upVotes and downVotes
-            response.setUpVotes((int) blog.getVotes().stream().filter(Vote::isUpVote).count());
-            response.setDownVotes((int) blog.getVotes().stream().filter(vote -> !vote.isUpVote()).count());
+            response.setUpVotes((int) blog.getVotes().stream().filter(vote -> vote.isUpVote() && vote.isStatus()).count());
+            response.setDownVotes((int) blog.getVotes().stream().filter(vote -> !vote.isUpVote() && vote.isStatus()).count());
 
             // get comments
             response.setComments(blog.getComments().stream()
@@ -157,8 +157,8 @@ public class BlogService {
                         commentDTO.setCreatedTime(comment.getCreatedTime());
 
                         // Map votes for the comment
-                        commentDTO.setUpVotes((int) comment.getVotes().stream().filter(Vote::isUpVote).count());
-                        commentDTO.setDownVotes((int) comment.getVotes().stream().filter(vote -> !vote.isUpVote()).count());
+                        commentDTO.setUpVotes((int) comment.getVotes().stream().filter(vote -> vote.isUpVote() && vote.isStatus()).count());
+                        commentDTO.setDownVotes((int) comment.getVotes().stream().filter(vote -> !vote.isUpVote() && vote.isStatus()).count());
 
                         return commentDTO;
                     })
@@ -182,7 +182,7 @@ public class BlogService {
         dto.setAvatar(blog.getUser().getAvatarData());
         dto.setCategories(blog.getCategories().stream().map(Category::getTitle).collect(Collectors.toList()));
         dto.setTags(blog.getTags().stream().map(Tag::getTitle).collect(Collectors.toList()));
-        dto.setUpVotes(blog.getVotes().size());
+        dto.setUpVotes((int) blog.getVotes().stream().filter(vote -> vote.isUpVote() && vote.isStatus()).count());
         dto.setComments(blog.getComments().size());
         dto.setCreatedTime(blog.getCreatedTime());
         return dto;
@@ -190,21 +190,33 @@ public class BlogService {
 
 
     @Transactional
-    public boolean upVoteBlog(Integer blogId, Integer userId) {
+    public boolean upVoteOrDeleteVoteBlog(Integer blogId, Integer userId) {
         Long blogIdLong = blogId.longValue();
         Long userIdLong = userId.longValue();
 
-        Vote vote = new Vote();
-        vote.setUpVote(true);
+        Optional<Vote> optionalVote = voteRepository.findVoteByBlog_IdAndUser_Id(blogIdLong, userIdLong);
 
-        Optional<User> optionalUser = userRepository.findUserById(userIdLong);
-        Optional<Blog> optionalBlog = blogRepository.findById(blogIdLong);
-        optionalUser.ifPresent(vote::setUser);
-        optionalBlog.ifPresent(vote::setBlog);
+        if (optionalVote.isPresent()) {
+            Vote vote = optionalVote.get();
+            if (vote.isUpVote() && vote.isStatus()) {
+                vote.setStatus(false);
+            } else if (vote.isUpVote() && !vote.isStatus()) {
+                vote.setStatus(true);
+            }
+        } else {
+            Vote vote = new Vote();
+            vote.setUpVote(true);
+            vote.setStatus(true);
 
-        vote.setCreatedTime(new Date());
+            Optional<User> optionalUser = userRepository.findUserById(userIdLong);
+            Optional<Blog> optionalBlog = blogRepository.findById(blogIdLong);
+            optionalUser.ifPresent(vote::setUser);
+            optionalBlog.ifPresent(vote::setBlog);
 
-        voteRepository.save(vote);
+            vote.setCreatedTime(new Date());
+
+            voteRepository.save(vote);
+        }
         return true;
     }
 }

@@ -123,12 +123,12 @@ public class HomeService {
             response.setTags(tagResponseDTOList);
 
             // TODO: After implement upvote function, check response
-            response.setTotalUpVotes(voteRepository.countVotesByUser_IdAndUpVoteIsTrue(l));
+            response.setTotalUpVotes(voteRepository.countVotesByUser_IdAndUpVoteIsTrueAndStatusIsTrue(l));
 
             // TODO: SAME
             int totalReceivedUpVotes = blogs.stream()
                 .flatMap(blog -> blog.getVotes().stream())
-                .filter(Vote::isUpVote)
+                .filter(vote -> vote.isUpVote() && vote.isStatus())
                 .mapToInt(vote -> 1) // Map each upvote to a count of 1
                 .sum();
             response.setTotalReceivedUpVotes(totalReceivedUpVotes);

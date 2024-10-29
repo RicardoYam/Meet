@@ -192,10 +192,10 @@ public class BlogController {
         }
 
         try {
-            if (blogService.upVoteBlog(blogId, userId)) {
-                return new ResponseEntity<>("Blog upvoted", HttpStatus.OK);
+            if (blogService.upVoteOrDeleteVoteBlog(blogId, userId)) {
+                return new ResponseEntity<>("Blog updated", HttpStatus.OK);
             }
-            return new ResponseEntity<>("Blog not upvoted", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Blog not updated", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             log.error(e);
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
