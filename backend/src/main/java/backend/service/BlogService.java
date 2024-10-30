@@ -3,6 +3,7 @@ package backend.service;
 import backend.dto.*;
 import backend.entity.*;
 import backend.repository.*;
+import backend.util.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -137,7 +138,7 @@ public class BlogService {
             response.setTitle(blog.getTitle());
             response.setContent(blog.getContent());
             response.setAuthor(blog.getUser().getUsername());
-            response.setAuthorAvatar(blog.getUser().getAvatarData());
+            response.setAuthorAvatar(Utils.getImageData(blog.getUser()).getAvatarData());
 
             // get categories and tags name
             response.setCategories(blog.getCategories().stream().map(Category::getTitle).collect(Collectors.toList()));
@@ -179,7 +180,7 @@ public class BlogService {
         dto.setTitle(blog.getTitle());
         dto.setContent(blog.getContent());
         dto.setAuthor(blog.getUser().getUsername());
-        dto.setAvatar(blog.getUser().getAvatarData());
+        dto.setAvatar(Utils.getImageData(blog.getUser()).getAvatarData());
         dto.setCategories(blog.getCategories().stream().map(Category::getTitle).collect(Collectors.toList()));
         dto.setTags(blog.getTags().stream().map(Tag::getTitle).collect(Collectors.toList()));
         dto.setUpVotes((int) blog.getVotes().stream().filter(vote -> vote.isUpVote() && vote.isStatus()).count());

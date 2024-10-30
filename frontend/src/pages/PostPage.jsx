@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getPost } from "../api/blog";
+import { getPost, upVotePost } from "../api/blog";
+import { getProfile } from "../api/user";
 import {
   Typography,
   Box,
@@ -9,31 +10,81 @@ import {
   Chip,
   IconButton,
   Divider,
+  Snackbar,
+  Alert,
 } from "@mui/material";
-import { ThumbUp, ThumbDown } from "@mui/icons-material";
+import { ThumbUpOutlined, ThumbUp } from "@mui/icons-material";
 import "./PostPage.css";
 import { formatDate } from "../util/utils";
+
 function PostPage() {
   const { postId } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isUpvoted, setIsUpvoted] = useState(false);
+  const [upVotes, setUpVotes] = useState(0);
+  const [error, setError] = useState({ open: false, message: "" });
+
+  const userId = localStorage.getItem("id") || sessionStorage.getItem("id");
+  const username =
+    localStorage.getItem("username") || sessionStorage.getItem("username");
 
   useEffect(() => {
-    const fetchPostData = async () => {
+    const fetchData = async () => {
       try {
-        const postResponse = await getPost(postId);
+        const [postResponse, profileResponse] = await Promise.all([
+          getPost(postId),
+          username ? getProfile(username) : Promise.resolve({ data: null }),
+        ]);
+
         if (postResponse.status === 200) {
           setPost(postResponse.data);
+          setUpVotes(postResponse.data.upVotes);
+
+          // Check if user has voted
+          if (profileResponse.data) {
+            const hasVoted = profileResponse.data.votes?.some(
+              (vote) => vote.blogId === parseInt(postId) && vote.upVote === true
+            );
+            setIsUpvoted(hasVoted);
+          }
         }
       } catch (error) {
-        console.error("Error fetching post data:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPostData();
-  }, [postId]);
+    fetchData();
+  }, [postId, username]);
+
+  const handleUpvote = async () => {
+    if (!userId) {
+      setError({
+        open: true,
+        message: "Please login to upvote posts",
+      });
+      return;
+    }
+
+    try {
+      const response = await upVotePost(postId, userId);
+      if (response.status === 200 || response.status === 201) {
+        setIsUpvoted(!isUpvoted);
+        setUpVotes((prev) => (isUpvoted ? prev - 1 : prev + 1));
+      }
+    } catch (error) {
+      setError({
+        open: true,
+        message: error.response?.data?.message || "Failed to upvote post",
+      });
+    }
+  };
+
+  const handleCloseError = () => {
+    setError({ open: false, message: "" });
+  };
 
   if (loading) {
     return (
@@ -108,17 +159,14 @@ function PostPage() {
       {/* Votes Section */}
       <Box className="votes-section" mt={4}>
         <Box display="flex" alignItems="center">
-          <IconButton>
-            <ThumbUp />
+          <IconButton
+            onClick={handleUpvote}
+            className={isUpvoted ? "text-purple-600" : ""}
+          >
+            {isUpvoted ? <ThumbUp /> : <ThumbUpOutlined />}
           </IconButton>
           <Typography variant="body2" mx={1}>
-            {post.upVotes}
-          </Typography>
-          <IconButton>
-            <ThumbDown />
-          </IconButton>
-          <Typography variant="body2" mx={1}>
-            {post.downVotes}
+            {upVotes}
           </Typography>
         </Box>
       </Box>
@@ -145,6 +193,22 @@ function PostPage() {
           </Typography>
         )}
       </Box>
+
+      {/* Error Snackbar */}
+      <Snackbar
+        open={error.open}
+        autoHideDuration={3000}
+        onClose={handleCloseError}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseError}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {error.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

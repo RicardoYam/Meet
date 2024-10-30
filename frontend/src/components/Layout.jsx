@@ -1,19 +1,21 @@
 import React from "react";
-import { Box } from "@mui/material";
 import TopNav from "./TopNav";
+import LeftNav from "./LeftNav";
+import { Box } from "@mui/material";
 import { useLocation } from "react-router-dom";
 
 function Layout({ children }) {
   const location = useLocation();
-  const noNavPaths = ["/login", "/signup", "/forgot-password"];
-  const showNav = !noNavPaths.includes(location.pathname);
+
+  // List of routes where we don't want to show navigation
+  const noNavRoutes = ["/login", "/signup"];
+  const shouldShowNav = !noNavRoutes.includes(location.pathname);
 
   return (
-    <Box className="flex flex-col min-h-screen">
-      {showNav && <TopNav />}
-      <Box component="main" className="flex-grow bg-gray-100">
-        {children}
-      </Box>
+    <Box>
+      {shouldShowNav && <TopNav />}
+      {shouldShowNav && <LeftNav />}
+      <Box className={shouldShowNav ? "pl-64 pt-16" : ""}>{children}</Box>
     </Box>
   );
 }

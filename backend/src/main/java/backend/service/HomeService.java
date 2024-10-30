@@ -7,8 +7,10 @@ import backend.repository.RoleRepository;
 import backend.repository.UserRepository;
 import backend.repository.VoteRepository;
 import backend.security.JWTGenerator;
+import backend.util.Utils;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -16,8 +18,14 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -63,6 +71,8 @@ public class HomeService {
         return true;
     }
 
+
+    @Transactional
     public LoginResponseDTO login(LoginDTO loginDTO) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -72,7 +82,8 @@ public class HomeService {
             String token = jwtGenerator.generateToken(authentication);
 
             User user = userRepository.findUserByUsername(loginDTO.getAccount()).get();
-            return new LoginResponseDTO(token, user.getId(), user.getUsername(), user.getEmail(), user.getAvatarData());
+            return new LoginResponseDTO(token, user.getId(), user.getUsername(), user.getEmail(),
+                    Utils.getImageData(user).getAvatarData());
         } catch (AuthenticationException e) {
             log.error(e.getMessage());
             return null;
@@ -81,15 +92,15 @@ public class HomeService {
 
 
     @Transactional
-    public ProfileResponseDTO getProfile(Integer id) {
-        long l = id.longValue();
-        Optional<User> optionalUser = userRepository.findUserById(l);
+    public ProfileResponseDTO getProfile(String username) {
+        Optional<User> optionalUser = userRepository.findUserByUsername(username);
         if (optionalUser.isPresent()) {
             ProfileResponseDTO response = new ProfileResponseDTO();
             User user = optionalUser.get();
 
             response.setId(user.getId());
             response.setName(user.getUsername());
+            response.setAvatar(Utils.getImageData(user).getAvatarData());
 
             // all posts of the specific user
             List<Blog> blogs = user.getBlogs();
@@ -122,8 +133,27 @@ public class HomeService {
             }
             response.setTags(tagResponseDTOList);
 
+            List<VoteResponseDTO> voteResponseDTOList = new ArrayList<>();
+            for (Vote vote : user.getVotes().stream().filter(Vote::isStatus).toList()) {
+                VoteResponseDTO oneVote = new VoteResponseDTO();
+                oneVote.setId(vote.getId());
+                oneVote.setUpVote(vote.isUpVote());
+                if (vote.getBlog() != null) {
+                    oneVote.setBlogId(vote.getBlog().getId());
+                } else {
+                    oneVote.setBlogId(null);
+                }
+                if (vote.getComment() != null) {
+                    oneVote.setCommentId(vote.getComment().getId());
+                } else {
+                    oneVote.setCommentId(null);
+                }
+                voteResponseDTOList.add(oneVote);
+            }
+            response.setVotes(voteResponseDTOList);
+
             // TODO: After implement upvote function, check response
-            response.setTotalUpVotes(voteRepository.countVotesByUser_IdAndUpVoteIsTrueAndStatusIsTrue(l));
+            response.setTotalUpVotes(voteRepository.countVotesByUser_IdAndUpVoteIsTrueAndStatusIsTrue(user.getId()));
 
             // TODO: SAME
             int totalReceivedUpVotes = blogs.stream()
@@ -134,12 +164,32 @@ public class HomeService {
             response.setTotalReceivedUpVotes(totalReceivedUpVotes);
 
             // TODO: SAME
-            response.setTotalComments(commentRepository.countCommentsByUserId(l));
+            response.setTotalComments(commentRepository.countCommentsByUserId(user.getId()));
 
             response.setCreatedTime(user.getCreatedTime());
 
             return response;
         }
         return null;
+    }
+
+
+    @Transactional
+    public boolean updateAvatar(Integer userId, MultipartFile avatar) throws IOException {
+        String imageName = avatar.getName();
+        String imageType = avatar.getContentType();
+        byte[] imageBlob = avatar.getBytes();
+
+        Optional<User> optionalUser = userRepository.findUserById(userId.longValue());
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+
+            user.setAvatarName(imageName);
+            user.setAvatarType(imageType);
+            user.setAvatarBlob(imageBlob);
+            userRepository.save(user);
+            return true;
+        }
+        return false;
     }
 }

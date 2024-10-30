@@ -13,12 +13,15 @@ import EditIcon from "@mui/icons-material/Edit";
 import PostCard from "./PostCard";
 import { useNavigate } from "react-router-dom";
 import { getAllPosts } from "../api/blog";
+import { getProfile, updateAvatar } from "../api/user";
 
-const UserProfile = ({ username, likes, comments, photos }) => {
+const UserProfile = ({ username, avatar, likes, comments, posts, userId }) => {
   const navigate = useNavigate();
 
   const [avatarUrl, setAvatarUrl] = useState(
-    `https://api.dicebear.com/6.x/initials/svg?seed=${username}`
+    avatar
+      ? avatar
+      : `https://ui-avatars.com/api/?name=${username}&background=4284f5&color=fff`
   );
   const fileInputRef = useRef(null);
 
@@ -26,14 +29,18 @@ const UserProfile = ({ username, likes, comments, photos }) => {
     fileInputRef.current.click();
   };
 
-  const handleFileChange = (event) => {
+  const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setAvatarUrl(e.target.result);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const response = await updateAvatar(userId, file);
+
+        if (response.status === 200) {
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error("Error updating avatar:", error);
+      }
     }
   };
 
@@ -64,9 +71,6 @@ const UserProfile = ({ username, likes, comments, photos }) => {
             />
           </Box>
           <Typography variant="h6">{username}</Typography>
-          <Typography variant="body2" color="textSecondary">
-            @{username.toLowerCase()}
-          </Typography>
           <Box className="flex justify-around w-full mt-4">
             <Box className="text-center">
               <Typography variant="h6">{likes}</Typography>
@@ -77,8 +81,8 @@ const UserProfile = ({ username, likes, comments, photos }) => {
               <Typography variant="body2">comments</Typography>
             </Box>
             <Box className="text-center">
-              <Typography variant="h6">{photos}</Typography>
-              <Typography variant="body2">photos</Typography>
+              <Typography variant="h6">{posts}</Typography>
+              <Typography variant="body2">posts</Typography>
             </Box>
           </Box>
           <Button
@@ -133,6 +137,7 @@ function Explore() {
     totalElements: 0,
     last: false,
   });
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     getAllPosts(0, 5).then((response) => {
@@ -146,6 +151,14 @@ function Explore() {
           totalElements: data.totalElements,
           last: data.last,
         });
+      }
+    });
+
+    getProfile(
+      localStorage.getItem("username") || sessionStorage.getItem("username")
+    ).then((response) => {
+      if (response.status === 200) {
+        setCurrentUser(response.data);
       }
     });
   }, []);
@@ -171,43 +184,52 @@ function Explore() {
   return (
     <Box className="container mx-auto px-4 py-8">
       <Box className="flex flex-col md:flex-row">
-        <Box className="w-full md:w-2/3 md:pr-4">
-          {posts.map((post) => (
-            <PostCard
-              key={post.id}
-              id={post.id}
-              title={post.title}
-              content={post.content}
-              author={post.author}
-              avatar={post.avatar}
-              categories={post.categories}
-              tags={post.tags}
-              upVotes={post.upVotes}
-              comments={post.comments}
-              createdTime={post.createdTime}
-            />
-          ))}
-          {!pageInfo.last && (
-            <Button
-              variant="contained"
-              onClick={loadMorePosts}
-              className="mt-4 bg-purple-600 hover:bg-purple-700"
-              fullWidth
-            >
-              Load More
-            </Button>
-          )}
-        </Box>
+        {posts?.length > 0 ? (
+          <Box className="w-full md:w-2/3 md:pr-4">
+            {posts.map((post) => (
+              <PostCard
+                key={post.id}
+                id={post.id}
+                title={post.title}
+                content={post.content}
+                author={post.author}
+                avatar={post.avatar}
+                categories={post.categories}
+                tags={post.tags}
+                upVotes={post.upVotes}
+                comments={post.comments}
+                createdTime={post.createdTime}
+                votes={post.votes}
+              />
+            ))}
+            {!pageInfo.last && (
+              <Button
+                variant="contained"
+                onClick={loadMorePosts}
+                className="mt-4 bg-purple-600 hover:bg-purple-700"
+                fullWidth
+              >
+                Load More
+              </Button>
+            )}
+          </Box>
+        ) : (
+          <Box className="w-full md:w-2/3 md:pr-4">
+            <Typography variant="h6">No posts found</Typography>
+          </Box>
+        )}
         <Box className="w-full md:w-1/3 mt-4 md:mt-0">
-          <UserProfile
-            username="Ralph Edwards"
-            likes={5587}
-            comments={35}
-            photos={493}
-          />
-          <TopicsList
-            topics={["#lomoica", "#analog", "#35mm", "#zenit", "#filmsoup"]}
-          />
+          {currentUser && (
+            <UserProfile
+              username={currentUser.name}
+              avatar={currentUser.avatar}
+              likes={currentUser.totalUpVotes}
+              comments={currentUser.totalComments}
+              posts={currentUser.blogs?.length || 0}
+              userId={currentUser.id}
+            />
+          )}
+          {currentUser?.tags && <TopicsList topics={currentUser.tags} />}
           <FeaturedPost
             title="THE FISHEYE NO.2 AND DOUBLE EXPOSURE – A MULTILAYER ADVENTURE"
             image="https://source.unsplash.com/random/800x600?camera"

@@ -35,3 +35,37 @@ export const getPost = (postId) => {
 export const getComments = (postId) => {
   return apiClient.get(`/posts/${postId}/comments`);
 };
+
+export const createTopic = (topicData) => {
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+  return apiClient.post("/tags", topicData, {
+    headers: {
+      Authorization: `${token}`,
+    },
+  });
+};
+
+export const createCategory = (categoryData) => {
+  return apiClient.post("/categories", categoryData, {
+    headers: {
+      Authorization: `${
+        localStorage.getItem("token") || sessionStorage.getItem("token")
+      }`,
+    },
+  });
+};
+
+export const upVotePost = (blogId, userId) => {
+  return apiClient.post(
+    `/vote?blogId=${blogId}&userId=${userId}`,
+    {},
+    {
+      headers: {
+        Authorization: `${
+          localStorage.getItem("token") || sessionStorage.getItem("token")
+        }`,
+      },
+    }
+  );
+};

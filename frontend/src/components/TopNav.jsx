@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -21,14 +21,28 @@ import StoreIcon from "@mui/icons-material/Store";
 import DescriptionIcon from "@mui/icons-material/Description";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import { getProfile } from "../api/user";
 
 function TopNav() {
   const navigate = useNavigate();
-  const username =
-    sessionStorage.getItem("username") || localStorage.getItem("username");
-  const email =
-    sessionStorage.getItem("email") || localStorage.getItem("email");
   const [anchorEl, setAnchorEl] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    const username =
+      sessionStorage.getItem("username") || localStorage.getItem("username");
+    if (username) {
+      getProfile(username)
+        .then((response) => {
+          if (response.status === 200) {
+            setUserProfile(response.data);
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching profile:", error);
+        });
+    }
+  }, []);
 
   const handleLogin = () => {
     navigate("/login");
@@ -45,6 +59,7 @@ function TopNav() {
   const handleLogout = () => {
     sessionStorage.clear();
     localStorage.clear();
+    setUserProfile(null);
     handleMenuClose();
     navigate("/login");
   };
@@ -55,7 +70,16 @@ function TopNav() {
   };
 
   return (
-    <AppBar position="static" className="bg-white text-black shadow-sm">
+    <AppBar
+      position="fixed"
+      sx={{
+        backgroundColor: "white",
+        color: "black",
+        borderBottom: "1px solid #e0e0e0",
+        boxShadow: "none",
+        zIndex: 1200,
+      }}
+    >
       <Toolbar className="justify-between">
         {/* Left side */}
         <Box className="flex items-center">
@@ -67,16 +91,6 @@ function TopNav() {
           >
             Meet
           </Typography>
-
-          <Box className="flex">
-            <Button color="inherit" className="font-medium">
-              FEED
-            </Button>
-            <Button color="inherit">EVENTS</Button>
-            <Button color="inherit">SHOP</Button>
-            <Button color="inherit">ABOUT</Button>
-            <Button color="inherit">EXPLORE</Button>
-          </Box>
         </Box>
 
         {/* Right side */}
@@ -89,7 +103,7 @@ function TopNav() {
               inputProps={{ "aria-label": "search" }}
             />
           </Box>
-          {username ? (
+          {userProfile ? (
             <>
               <IconButton color="inherit">
                 <MailOutlineIcon />
@@ -99,11 +113,10 @@ function TopNav() {
               </IconButton>
               <IconButton color="inherit" onClick={handleMenuOpen}>
                 <Avatar
-                  alt={username}
+                  alt={userProfile.name}
                   src={
-                    sessionStorage.getItem("avatar") ||
-                    localStorage.getItem("avatar") ||
-                    `https://ui-avatars.com/api/?name=${username}&background=random`
+                    userProfile.avatar ||
+                    `https://ui-avatars.com/api/?name=${userProfile.name}&background=4284f5&color=fff`
                   }
                 />
               </IconButton>
@@ -142,18 +155,19 @@ function TopNav() {
               >
                 <MenuItem onClick={handleProfileClick}>
                   <Avatar
-                    alt={username}
+                    alt={userProfile.name}
                     src={
-                      sessionStorage.getItem("avatar") ||
-                      localStorage.getItem("avatar") ||
-                      `https://ui-avatars.com/api/?name=${username}&background=random`
+                      userProfile.avatar ||
+                      `https://ui-avatars.com/api/?name=${userProfile.name}&background=4284f5&color=fff`
                     }
                   />
                   <Box ml={1}>
-                    <Typography variant="subtitle1">{username}</Typography>
+                    <Typography variant="subtitle1">
+                      {userProfile.name}
+                    </Typography>
                     <Typography variant="body2" color="textSecondary">
-                      {sessionStorage.getItem("email") ||
-                        localStorage.getItem("email")}
+                      {localStorage.getItem("email") ||
+                        sessionStorage.getItem("email")}
                     </Typography>
                   </Box>
                 </MenuItem>

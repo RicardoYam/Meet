@@ -5,15 +5,20 @@ import backend.dto.LoginResponseDTO;
 import backend.dto.ProfileResponseDTO;
 import backend.dto.UserDTO;
 import backend.repository.UserRepository;
+import backend.security.JWTGenerator;
 import backend.service.HomeService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -26,6 +31,9 @@ public class HomeController {
 
     @Autowired
     private HomeService homeService;
+
+    @Autowired
+    private JWTGenerator jwtGenerator;
 
 
     /**
@@ -134,12 +142,43 @@ public class HomeController {
 
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(@RequestParam Integer id) {
-        if (userRepository.existsById(id.longValue())) {
-            ProfileResponseDTO response = homeService.getProfile(id);
+    public ResponseEntity<?> getProfile(@RequestParam String username) {
+        if (userRepository.existsByUsername(username)) {
+            ProfileResponseDTO response = homeService.getProfile(username);
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
         return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+    }
+
+
+    @PutMapping("/profile")
+    @Transactional
+    public ResponseEntity<String> updateAvatar(@RequestParam Integer userId, @RequestPart MultipartFile avatar,
+                                               HttpServletRequest request) {
+        if (avatar == null) {
+            return new ResponseEntity<>("Avatar can't be null", HttpStatus.BAD_REQUEST);
+        }
+
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            String token = bearerToken.substring(7);
+            if (jwtGenerator.validateToken(token)) {
+                if (Objects.equals(jwtGenerator.getUsernameFromToken(token), userRepository.findUserById(userId.longValue()).get().getUsername())) {
+                    try {
+                        if (homeService.updateAvatar(userId, avatar)) {
+                            return new ResponseEntity<>("Avatar updated successfully", HttpStatus.OK);
+                        }
+                        return new ResponseEntity<>("Avatar update failed", HttpStatus.UNAUTHORIZED);
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                        return new ResponseEntity<>("An error occurred while processing the request", HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                }
+                return new ResponseEntity<>("You are not authorized to update the avatar", HttpStatus.UNAUTHORIZED);
+            }
+            return new ResponseEntity<>("You are not authorized to update the avatar", HttpStatus.UNAUTHORIZED);
+        }
+        return new ResponseEntity<>("Please provide a valid token", HttpStatus.BAD_REQUEST);
     }
 
 }

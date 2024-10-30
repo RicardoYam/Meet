@@ -23,7 +23,6 @@ function Login() {
           ),
           localStorage.setItem("username", response.data.username),
           localStorage.setItem("id", response.data.userId),
-          localStorage.setItem("avatar", response.data.avatar),
           localStorage.setItem("email", response.data.email))
         : (sessionStorage.setItem(
             "token",
@@ -31,7 +30,6 @@ function Login() {
           ),
           sessionStorage.setItem("username", response.data.username),
           sessionStorage.setItem("id", response.data.userId),
-          sessionStorage.setItem("avatar", response.data.avatar),
           sessionStorage.setItem("email", response.data.email));
       navigate("/");
     } catch (error) {

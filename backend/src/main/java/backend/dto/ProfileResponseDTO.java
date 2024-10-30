@@ -12,11 +12,15 @@ public class ProfileResponseDTO {
 
     private String name;
 
+    private String avatar;
+
     private List<BlogResponseDTO> blogs;
 
     private List<CategoryResponseDTO> categories;
 
     private List<TagResponseDTO> tags;
+
+    private List<VoteResponseDTO> votes;
 
     private Integer totalUpVotes;
 
