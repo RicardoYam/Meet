@@ -19,7 +19,6 @@ import {
 } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import ExploreIcon from "@mui/icons-material/Explore";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandLess from "@mui/icons-material/ExpandLess";
@@ -189,16 +188,6 @@ function LeftNav() {
           </ListItem>
           <ListItem
             button
-            onClick={() => navigate("/explore")}
-            sx={{ borderRadius: 1 }}
-          >
-            <ListItemIcon>
-              <ExploreIcon />
-            </ListItemIcon>
-            <ListItemText primary="Explore" />
-          </ListItem>
-          <ListItem
-            button
             onClick={() => navigate("/all")}
             sx={{ borderRadius: 1 }}
           >
@@ -231,7 +220,7 @@ function LeftNav() {
                 <ListItemIcon>
                   <AddIcon />
                 </ListItemIcon>
-                <ListItemText primary="Create a topic" />
+                <ListItemText primary="Create New" />
               </ListItem>
               {userInterests?.tags?.map((tag, index) => (
                 <ListItem
@@ -279,7 +268,7 @@ function LeftNav() {
                 <ListItemIcon>
                   <AddIcon />
                 </ListItemIcon>
-                <ListItemText primary="Create a category" />
+                <ListItemText primary="Create New" />
               </ListItem>
               {userInterests?.categories?.map((category, index) => (
                 <ListItem

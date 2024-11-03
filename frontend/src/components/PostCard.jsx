@@ -107,93 +107,138 @@ const PostCard = ({
 
   return (
     <>
-      <Card
-        className="mb-4 rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+      <Box
         onClick={handleCardClick}
+        sx={{
+          mb: 4,
+          cursor: "pointer",
+        }}
       >
         <Box className="flex">
           {firstImage && (
-            <div className="flex justify-center items-center w-48 h-48">
+            <Box sx={{ width: 200, height: 134, mr: 3 }}>
               <img
                 src={firstImage}
                 alt="Post preview"
-                className="w-40 h-40 object-cover rounded-xl"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: "4px",
+                }}
               />
-            </div>
+            </Box>
           )}
-          <Box className="flex-1 flex flex-col">
-            <CardContent className="flex-1">
-              <Box className="flex items-center gap-2 mb-2">
-                <Avatar
-                  src={
-                    avatar ||
-                    `https://ui-avatars.com/api/?name=${author}&background=4284f5&color=fff`
-                  }
-                  sx={{ width: 24, height: 24 }}
+          <Box sx={{ flex: 1 }}>
+            {/* Author info */}
+            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+              <Avatar
+                src={
+                  avatar ||
+                  `https://ui-avatars.com/api/?name=${author}&background=4284f5&color=fff`
+                }
+                sx={{ width: 24, height: 24, mr: 1 }}
+              />
+              <Typography variant="body2" sx={{ fontWeight: 500, mr: 1 }}>
+                {author}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                •
+              </Typography>
+              {categories && categories[0] && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ ml: 1 }}
+                >
+                  {categories[0]}
+                </Typography>
+              )}
+            </Box>
+
+            {/* Title */}
+            <Typography
+              variant="h6"
+              className="post-title"
+              sx={{
+                mb: 1,
+                fontWeight: 500,
+                fontSize: "1.25rem",
+                transition: "color 0.2s",
+              }}
+            >
+              {title}
+            </Typography>
+
+            {/* Content preview */}
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {textPreview}
+            </Typography>
+
+            {/* Stats and metadata */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <AccessTimeIcon
+                  sx={{ fontSize: 18, mr: 0.5, color: "text.secondary" }}
                 />
-                <Typography variant="body2" className="font-medium">
-                  {author}
+                <Typography variant="body2" color="text.secondary">
+                  {new Date(createdTime).toLocaleDateString("en-AU", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
                 </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  •
-                </Typography>
-                {categories && categories[0] && (
-                  <Typography variant="body2" color="textSecondary">
-                    {categories[0]}
-                  </Typography>
-                )}
               </Box>
-              <Typography variant="h6" className="mb-2 font-bold">
-                {title}
-              </Typography>
-              <Typography
-                variant="body2"
-                color="textSecondary"
-                className="mb-4"
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <VisibilityIcon
+                  sx={{ fontSize: 18, mr: 0.5, color: "text.secondary" }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {Math.ceil(textContent.length / 200)} min read
+                </Typography>
+              </Box>
+              <Box sx={{ flexGrow: 1 }} />
+              <Box
+                className="upvote-button"
+                sx={{ display: "flex", alignItems: "center" }}
               >
-                {textPreview}
-              </Typography>
-              <Box className="flex items-center gap-4 text-gray-500 pt-4">
-                <Box className="flex items-center gap-2">
-                  <AccessTimeIcon sx={{ fontSize: 20 }} />
-                  <Typography variant="body2">
-                    {new Date(createdTime).toLocaleDateString("en-AU", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </Typography>
-                </Box>
-                <Box className="flex items-center gap-2">
-                  <VisibilityIcon sx={{ fontSize: 20 }} />
-                  <Typography variant="body2" color="textSecondary">
-                    {Math.ceil(textContent.length / 200)} min read
-                  </Typography>
-                </Box>
-                <Box className="flex-grow" />
-                <Box className="flex items-center gap-1 upvote-button">
-                  <IconButton
-                    size="small"
-                    onClick={handleUpvote}
-                    className={isUpvoted ? "text-purple-600" : ""}
-                  >
-                    {isUpvoted ? (
-                      <ThumbUpIcon sx={{ fontSize: 20 }} />
-                    ) : (
-                      <ThumbUpOutlinedIcon sx={{ fontSize: 20 }} />
-                    )}
-                  </IconButton>
-                  <Typography variant="body2">{upVotes}</Typography>
-                </Box>
-                <Box className="flex items-center gap-1 upvote-button">
-                  <ChatBubbleOutlineIcon />
-                  <Typography variant="body2">{comments}</Typography>
-                </Box>
+                <IconButton
+                  size="small"
+                  onClick={handleUpvote}
+                  sx={{
+                    color: isUpvoted ? "#9333ea" : "text.secondary",
+                    "&:hover": {
+                      color: "#9333ea",
+                    },
+                  }}
+                >
+                  {isUpvoted ? (
+                    <ThumbUpIcon fontSize="small" />
+                  ) : (
+                    <ThumbUpOutlinedIcon fontSize="small" />
+                  )}
+                </IconButton>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: isUpvoted ? "#9333ea" : "text.secondary",
+                  }}
+                >
+                  {upVotes}
+                </Typography>
               </Box>
-            </CardContent>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <ChatBubbleOutlineIcon
+                  sx={{ fontSize: 18, mr: 0.5, color: "text.secondary" }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {comments?.length || 0}
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </Box>
-      </Card>
+      </Box>
 
       <Snackbar
         open={error.open}

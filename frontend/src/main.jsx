@@ -10,7 +10,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
-import Explore from "./components/Explore";
+import Home from "./components/Home";
 import Profile from "./pages/ProfilePage";
 import CreatePost from "./pages/CreatePost";
 import PostPage from "./pages/PostPage";
@@ -21,7 +21,7 @@ createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <Layout>
         <Routes>
-          <Route path="/" element={<Explore />} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
