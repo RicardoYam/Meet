@@ -13,6 +13,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import { useNavigate } from "react-router-dom";
 import { upVotePost } from "../api/blog";
 import { getProfile } from "../api/user";
@@ -25,6 +26,7 @@ const PostCard = ({
   avatar,
   categories,
   upVotes: initialUpVotes,
+  comments,
   createdTime,
 }) => {
   const navigate = useNavigate();
@@ -63,7 +65,7 @@ const PostCard = ({
   const firstImage = tempDiv.querySelector("img")?.src;
   const textContent = tempDiv.textContent || tempDiv.innerText;
   const textPreview =
-    textContent.slice(0, 100) + (textContent.length > 100 ? "..." : "");
+    textContent.slice(0, 100) + (textContent.length > 20 ? "..." : "");
 
   const handleCardClick = (e) => {
     if (e.target.closest(".upvote-button")) {
@@ -85,7 +87,6 @@ const PostCard = ({
 
     try {
       const response = await upVotePost(id, userId);
-      console.log("Upvote response:", response);
 
       if (response.status === 200 || response.status === 201) {
         setIsUpvoted(!isUpvoted);
@@ -183,6 +184,10 @@ const PostCard = ({
                     )}
                   </IconButton>
                   <Typography variant="body2">{upVotes}</Typography>
+                </Box>
+                <Box className="flex items-center gap-1 upvote-button">
+                  <ChatBubbleOutlineIcon />
+                  <Typography variant="body2">{comments}</Typography>
                 </Box>
               </Box>
             </CardContent>

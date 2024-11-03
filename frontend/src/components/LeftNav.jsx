@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   List,
@@ -27,6 +27,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { useNavigate } from "react-router-dom";
 import { createTopic, createCategory } from "../api/blog";
+import { getProfile } from "../api/user";
 
 function LeftNav() {
   const navigate = useNavigate();
@@ -50,6 +51,27 @@ function LeftNav() {
     open: false,
     message: "",
   });
+  const [userInterests, setUserInterests] = useState(null);
+
+  const username =
+    localStorage.getItem("username") || sessionStorage.getItem("username");
+
+  useEffect(() => {
+    const fetchUserInterests = async () => {
+      if (!username) return;
+
+      try {
+        const response = await getProfile(username);
+        if (response.status === 200) {
+          setUserInterests(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching user interests:", error);
+      }
+    };
+
+    fetchUserInterests();
+  }, [username]);
 
   const handleOpenTopicDialog = () => {
     setOpenTopicDialog(true);
@@ -211,6 +233,26 @@ function LeftNav() {
                 </ListItemIcon>
                 <ListItemText primary="Create a topic" />
               </ListItem>
+              {userInterests?.tags?.map((tag, index) => (
+                <ListItem
+                  key={index}
+                  button
+                  sx={{ pl: 4, borderRadius: 1 }}
+                  onClick={() => navigate(`/tag/${tag.title}`)}
+                >
+                  <ListItemText
+                    primary={`${tag.title}`}
+                    primaryTypographyProps={{
+                      variant: "body2",
+                      style: {
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      },
+                    }}
+                  />
+                </ListItem>
+              ))}
             </List>
           </Collapse>
 
@@ -239,6 +281,26 @@ function LeftNav() {
                 </ListItemIcon>
                 <ListItemText primary="Create a category" />
               </ListItem>
+              {userInterests?.categories?.map((category, index) => (
+                <ListItem
+                  key={index}
+                  button
+                  sx={{ pl: 4, borderRadius: 1 }}
+                  onClick={() => navigate(`/category/${category.title}`)}
+                >
+                  <ListItemText
+                    primary={category.title}
+                    primaryTypographyProps={{
+                      variant: "body2",
+                      style: {
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      },
+                    }}
+                  />
+                </ListItem>
+              ))}
             </List>
           </Collapse>
         </List>

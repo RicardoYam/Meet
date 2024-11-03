@@ -69,3 +69,18 @@ export const upVotePost = (blogId, userId) => {
     }
   );
 };
+
+export const postComment = async (blogId, commentId, content = null) => {
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+  const userId = localStorage.getItem("id") || sessionStorage.getItem("id");
+  return apiClient.post(
+    `/comments`,
+    { blogId, userId, commentId, content },
+    {
+      headers: {
+        Authorization: `${token}`,
+      },
+    }
+  );
+};

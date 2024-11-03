@@ -14,6 +14,8 @@ import PostCard from "./PostCard";
 import { useNavigate } from "react-router-dom";
 import { getAllPosts } from "../api/blog";
 import { getProfile, updateAvatar } from "../api/user";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 
 const UserProfile = ({ username, avatar, likes, comments, posts, userId }) => {
   const navigate = useNavigate();
@@ -98,33 +100,47 @@ const UserProfile = ({ username, avatar, likes, comments, posts, userId }) => {
   );
 };
 
-const TopicsList = ({ topics }) => (
+const TopicsList = ({ topics, categories }) => (
   <Card className="mb-4 rounded-xl shadow-md">
-    <CardContent>
-      <Typography variant="h6" className="mb-2">
-        Topics you follow
-      </Typography>
-      <Box className="flex flex-wrap">
-        {topics.map((topic, index) => (
-          <Typography
-            key={index}
-            variant="body2"
-            className="bg-gray-200 rounded-full px-3 py-1 m-1"
-          >
-            {topic}
-          </Typography>
-        ))}
-      </Box>
-    </CardContent>
-  </Card>
-);
+    {categories?.length > 0 && (
+      <CardContent>
+        <Typography variant="h6" className="mb-2 flex items-center">
+          <BookmarkIcon className="mr-2" />
+          Categories you interested in
+        </Typography>
+        <Box className="flex flex-wrap">
+          {categories.map((category, index) => (
+            <Typography
+              key={index}
+              variant="body2"
+              className="bg-gray-200 rounded-full px-3 py-1 m-1"
+            >
+              {category.title}
+            </Typography>
+          ))}
+        </Box>
+      </CardContent>
+    )}
 
-const FeaturedPost = ({ title, image }) => (
-  <Card className="mb-4 rounded-xl shadow-md">
-    <CardMedia component="img" height="140" image={image} alt={title} />
-    <CardContent>
-      <Typography variant="h6">{title}</Typography>
-    </CardContent>
+    {topics?.length > 0 && (
+      <CardContent sx={{ pt: categories?.length ? 0 : 2 }}>
+        <Typography variant="h6" className="mb-2 flex items-center">
+          <LocalOfferIcon className="mr-2" />
+          Topics you follow
+        </Typography>
+        <Box className="flex flex-wrap">
+          {topics.map((topic, index) => (
+            <Typography
+              key={index}
+              variant="body2"
+              className="bg-gray-200 rounded-full px-3 py-1 m-1"
+            >
+              #{topic.title}
+            </Typography>
+          ))}
+        </Box>
+      </CardContent>
+    )}
   </Card>
 );
 
@@ -229,11 +245,12 @@ function Explore() {
               userId={currentUser.id}
             />
           )}
-          {currentUser?.tags && <TopicsList topics={currentUser.tags} />}
-          <FeaturedPost
-            title="THE FISHEYE NO.2 AND DOUBLE EXPOSURE – A MULTILAYER ADVENTURE"
-            image="https://source.unsplash.com/random/800x600?camera"
-          />
+          {(currentUser?.tags || currentUser?.categories) && (
+            <TopicsList
+              topics={currentUser.tags}
+              categories={currentUser.categories}
+            />
+          )}
         </Box>
       </Box>
     </Box>

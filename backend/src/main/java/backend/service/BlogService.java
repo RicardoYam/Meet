@@ -30,8 +30,12 @@ public class BlogService {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private VoteRepository voteRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
 
 
     public boolean createCategory(CategoryDTO categoryDTO) {
@@ -61,6 +65,32 @@ public class BlogService {
     }
 
 
+    public boolean followACategory(Integer categoryId, Integer userId) {
+        Optional<User> optionalUser = userRepository.findUserById(userId.longValue());
+        if (optionalUser.isEmpty()) {
+            return false;
+        }
+
+        Optional<Category> optionalCategory = categoryRepository.findById(categoryId.longValue());
+        if (optionalCategory.isEmpty()) {
+            return false;
+        }
+
+        User user = optionalUser.get();
+        Category category = optionalCategory.get();
+        if (user.getCategories().contains(category)) {
+            return false;
+        }
+
+        List<Category> categories = user.getCategories();
+        categories.add(category);
+
+        user.setCategories(categories);
+        userRepository.save(user);
+        return true;
+    }
+
+
     public boolean createTag(TagDTO tagDTO) {
         Tag tag = new Tag();
         tag.setTitle(tagDTO.getTitle());
@@ -71,6 +101,7 @@ public class BlogService {
     }
 
 
+    // TODO:SET users
     public List<TagResponseDTO> getTags() {
         List<Tag> tags = tagRepository.findAll();
         if (tags.isEmpty()) {
@@ -85,6 +116,32 @@ public class BlogService {
             response.add(tagResponseDTO);
         }
         return response;
+    }
+
+
+    public boolean followATag(Integer tagId, Integer userId) {
+        Optional<User> optionalUser = userRepository.findUserById(userId.longValue());
+        if (optionalUser.isEmpty()) {
+            return false;
+        }
+
+        Optional<Tag> optionalTag = tagRepository.findById(tagId.longValue());
+        if (optionalTag.isEmpty()) {
+            return false;
+        }
+
+        User user = optionalUser.get();
+        Tag tag = optionalTag.get();
+        if (user.getTags().contains(tag)) {
+            return false;
+        }
+
+        List<Tag> tags = user.getTags();
+        tags.add(tag);
+
+        user.setTags(tags);
+        userRepository.save(user);
+        return true;
     }
 
 
@@ -155,7 +212,9 @@ public class BlogService {
                         commentDTO.setId(comment.getId());
                         commentDTO.setContent(comment.getContent());
                         commentDTO.setAuthor(comment.getUser().getUsername());
+                        commentDTO.setAuthorAvatar(Utils.getImageData(comment.getUser()).getAvatarData());
                         commentDTO.setCreatedTime(comment.getCreatedTime());
+                        commentDTO.setParentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null);
 
                         // Map votes for the comment
                         commentDTO.setUpVotes((int) comment.getVotes().stream().filter(vote -> vote.isUpVote() && vote.isStatus()).count());
@@ -218,6 +277,34 @@ public class BlogService {
 
             voteRepository.save(vote);
         }
+        return true;
+    }
+
+
+    @Transactional
+    public boolean createComment(Integer blogId, Optional<Integer> commentId, User user, String comment) {
+        Comment newComment = new Comment();
+        newComment.setContent(comment);
+        newComment.setUser(user);
+        newComment.setCreatedTime(new Date());
+
+        Optional<Blog> blogOptional = blogRepository.findById(blogId.longValue());
+        if (blogOptional.isEmpty()) {
+            return false; // Blog not found
+        }
+        newComment.setBlog(blogOptional.get());
+
+        if (commentId != null && commentId.isPresent()) {
+            Optional<Comment> parentCommentOptional = commentRepository.findById(commentId.get().longValue());
+            if (parentCommentOptional.isEmpty()) {
+                return false; // Parent comment not found
+            }
+            Comment parentComment = parentCommentOptional.get();
+            newComment.setBlog(parentComment.getBlog());
+            newComment.setParentComment(parentComment);
+        }
+
+        commentRepository.save(newComment);
         return true;
     }
 }

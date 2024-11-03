@@ -1,10 +1,9 @@
 package backend.controller;
 
 import backend.dto.*;
-import backend.repository.BlogRepository;
-import backend.repository.CategoryRepository;
-import backend.repository.TagRepository;
-import backend.repository.UserRepository;
+import backend.entity.Comment;
+import backend.entity.User;
+import backend.repository.*;
 import backend.service.BlogService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -36,6 +36,8 @@ public class BlogController {
     private BlogRepository blogRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private CommentRepository commentRepository;
 
     @PostMapping("/categories")
     public ResponseEntity<String> addCategory(@RequestBody CategoryDTO categoryDTO) {
@@ -74,6 +76,23 @@ public class BlogController {
         } catch (Exception e) {
             log.error(e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @PostMapping("/categories/{categoryId}")
+    public ResponseEntity<?> followACategory(@PathVariable Integer categoryId, @RequestParam Integer userId) {
+        if (categoryId == null || userId == null) {
+            return new ResponseEntity<>("Please provide a valid category", HttpStatus.BAD_REQUEST);
+        }
+        try {
+            if (blogService.followACategory(categoryId, userId)) {
+                return new ResponseEntity<>("category followed", HttpStatus.CREATED);
+            }
+            return new ResponseEntity<>("category not followed", HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            log.error(e);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         }
     }
 
@@ -118,6 +137,22 @@ public class BlogController {
         }
     }
 
+    @PostMapping("/tags/{tagId}")
+    public ResponseEntity<?> followATag(@PathVariable Integer tagId, @RequestParam Integer userId) {
+        if (tagId == null || userId == null) {
+            return new ResponseEntity<>("Please provide a valid tag", HttpStatus.BAD_REQUEST);
+        }
+        try {
+            if (blogService.followATag(tagId, userId)) {
+                return new ResponseEntity<>("Tag followed", HttpStatus.CREATED);
+            }
+            return new ResponseEntity<>("Tag not followed", HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            log.error(e);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+        }
+    }
+
 
     @PostMapping("/posts")
     public ResponseEntity<?> createBlog(@RequestBody BlogDTO blogDTO) {
@@ -155,6 +190,7 @@ public class BlogController {
         }
         return new ResponseEntity<>(blogs, HttpStatus.OK);
     }
+
 
     @GetMapping("/posts/{id}")
     public ResponseEntity<?> getOneBlog(@PathVariable int id) {
@@ -196,6 +232,35 @@ public class BlogController {
                 return new ResponseEntity<>("Blog updated", HttpStatus.OK);
             }
             return new ResponseEntity<>("Blog not updated", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            log.error(e);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @PostMapping("/comments")
+    public ResponseEntity<?> createComment(@RequestBody CommentDTO commentDTO) {
+        if (commentDTO.getBlogId() == null && commentDTO.getCommentId().isEmpty()) {
+            return new ResponseEntity<>("Please provide a valid id", HttpStatus.BAD_REQUEST);
+        }
+
+        if (commentDTO.getContent() == null || commentDTO.getContent().trim().isEmpty()) {
+            return new ResponseEntity<>("Comment content cannot be empty", HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<User> optionalUser = userRepository.findUserById(commentDTO.getUserId().longValue());
+        if (optionalUser.isEmpty()) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+
+        User user = optionalUser.get();
+
+        try {
+            if (blogService.createComment(commentDTO.getBlogId(), commentDTO.getCommentId(), user, commentDTO.getContent())) {
+                return new ResponseEntity<>("Comment created", HttpStatus.CREATED);
+            }
+            return new ResponseEntity<>("Comment not created", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             log.error(e);
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
