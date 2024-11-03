@@ -18,12 +18,11 @@ import {
   Snackbar,
 } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import AllInboxIcon from "@mui/icons-material/AllInbox";
+import CategoryIcon from "@mui/icons-material/Category";
+import TopicIcon from "@mui/icons-material/Topic";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
-import GroupsIcon from "@mui/icons-material/Groups";
 import { useNavigate } from "react-router-dom";
 import { createTopic, createCategory } from "../api/blog";
 import { getProfile } from "../api/user";
@@ -54,6 +53,10 @@ function LeftNav() {
 
   const username =
     localStorage.getItem("username") || sessionStorage.getItem("username");
+
+  const isLoggedIn = Boolean(
+    localStorage.getItem("token") || sessionStorage.getItem("token")
+  );
 
   useEffect(() => {
     const fetchUserInterests = async () => {
@@ -178,120 +181,130 @@ function LeftNav() {
           </ListItem>
           <ListItem
             button
-            onClick={() => navigate("/popular")}
+            onClick={() => navigate("/categories")}
             sx={{ borderRadius: 1 }}
           >
             <ListItemIcon>
-              <TrendingUpIcon />
+              <CategoryIcon />
             </ListItemIcon>
-            <ListItemText primary="Popular" />
+            <ListItemText primary="Categories" />
           </ListItem>
           <ListItem
             button
-            onClick={() => navigate("/all")}
+            onClick={() => navigate("/topics")}
             sx={{ borderRadius: 1 }}
           >
             <ListItemIcon>
-              <AllInboxIcon />
+              <TopicIcon />
             </ListItemIcon>
-            <ListItemText primary="All" />
+            <ListItemText primary="Topics" />
           </ListItem>
 
-          <Divider sx={{ my: 2 }} />
+          {isLoggedIn && (
+            <>
+              <Divider sx={{ my: 2 }} />
 
-          {/* Topics Section */}
-          <ListItem button onClick={() => setCustomFeedsOpen(!customFeedsOpen)}>
-            <ListItemText
-              primary={
-                <Typography variant="subtitle2" color="textSecondary">
-                  Topics
-                </Typography>
-              }
-            />
-            {customFeedsOpen ? <ExpandLess /> : <ExpandMore />}
-          </ListItem>
-          <Collapse in={customFeedsOpen} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
+              {/* Topics Section */}
               <ListItem
                 button
-                sx={{ pl: 4, borderRadius: 1 }}
-                onClick={handleOpenTopicDialog}
+                onClick={() => setCustomFeedsOpen(!customFeedsOpen)}
               >
-                <ListItemIcon>
-                  <AddIcon />
-                </ListItemIcon>
-                <ListItemText primary="Create New" />
+                <ListItemText
+                  primary={
+                    <Typography variant="subtitle2" color="textSecondary">
+                      Topics
+                    </Typography>
+                  }
+                />
+                {customFeedsOpen ? <ExpandLess /> : <ExpandMore />}
               </ListItem>
-              {userInterests?.tags?.map((tag, index) => (
-                <ListItem
-                  key={index}
-                  button
-                  sx={{ pl: 4, borderRadius: 1 }}
-                  onClick={() => navigate(`/tag/${tag.title}`)}
-                >
-                  <ListItemText
-                    primary={`${tag.title}`}
-                    primaryTypographyProps={{
-                      variant: "body2",
-                      style: {
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      },
-                    }}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </Collapse>
+              <Collapse in={customFeedsOpen} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  <ListItem
+                    button
+                    sx={{ pl: 4, borderRadius: 1 }}
+                    onClick={handleOpenTopicDialog}
+                  >
+                    <ListItemIcon>
+                      <AddIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Create New" />
+                  </ListItem>
+                  {userInterests?.tags?.map((tag, index) => (
+                    <ListItem
+                      key={index}
+                      button
+                      sx={{ pl: 4, borderRadius: 1 }}
+                      onClick={() => navigate(`/tag/${tag.title}`)}
+                    >
+                      <ListItemText
+                        primary={`${tag.title}`}
+                        primaryTypographyProps={{
+                          variant: "body2",
+                          style: {
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          },
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Collapse>
 
-          <Divider sx={{ my: 2 }} />
+              <Divider sx={{ my: 2 }} />
 
-          {/* Communities Section */}
-          <ListItem button onClick={() => setCommunitiesOpen(!communitiesOpen)}>
-            <ListItemText
-              primary={
-                <Typography variant="subtitle2" color="textSecondary">
-                  Categories
-                </Typography>
-              }
-            />
-            {communitiesOpen ? <ExpandLess /> : <ExpandMore />}
-          </ListItem>
-          <Collapse in={communitiesOpen} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
+              {/* Categories Section */}
               <ListItem
                 button
-                sx={{ pl: 4, borderRadius: 1 }}
-                onClick={handleOpenCategoryDialog}
+                onClick={() => setCommunitiesOpen(!communitiesOpen)}
               >
-                <ListItemIcon>
-                  <AddIcon />
-                </ListItemIcon>
-                <ListItemText primary="Create New" />
+                <ListItemText
+                  primary={
+                    <Typography variant="subtitle2" color="textSecondary">
+                      Categories
+                    </Typography>
+                  }
+                />
+                {communitiesOpen ? <ExpandLess /> : <ExpandMore />}
               </ListItem>
-              {userInterests?.categories?.map((category, index) => (
-                <ListItem
-                  key={index}
-                  button
-                  sx={{ pl: 4, borderRadius: 1 }}
-                  onClick={() => navigate(`/category/${category.title}`)}
-                >
-                  <ListItemText
-                    primary={category.title}
-                    primaryTypographyProps={{
-                      variant: "body2",
-                      style: {
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      },
-                    }}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </Collapse>
+              <Collapse in={communitiesOpen} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  <ListItem
+                    button
+                    sx={{ pl: 4, borderRadius: 1 }}
+                    onClick={handleOpenCategoryDialog}
+                  >
+                    <ListItemIcon>
+                      <AddIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Create New" />
+                  </ListItem>
+                  {userInterests?.categories?.map((category, index) => (
+                    <ListItem
+                      key={index}
+                      button
+                      sx={{ pl: 4, borderRadius: 1 }}
+                      onClick={() => navigate(`/category/${category.title}`)}
+                    >
+                      <ListItemText
+                        primary={category.title}
+                        primaryTypographyProps={{
+                          variant: "body2",
+                          style: {
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          },
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Collapse>
+            </>
+          )}
         </List>
       </Box>
 

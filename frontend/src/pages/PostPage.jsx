@@ -91,7 +91,10 @@ const Comment = ({ comment, postId, onCommentAdd, setError }) => {
     <Box className="comment" sx={{ mb: 2 }}>
       <Box display="flex" alignItems="center" mb={1}>
         <Avatar
-          src={comment.authorAvatar}
+          src={
+            comment.authorAvatar ||
+            `https://ui-avatars.com/api/?name=${comment.author}&background=4284f5&color=fff`
+          }
           alt={comment.author}
           sx={{ width: 24, height: 24, mr: 1 }}
         >
@@ -354,7 +357,10 @@ function PostPage() {
       {/* Author Info */}
       <Box className="author-section">
         <Avatar
-          src={post.authorAvatar}
+          src={
+            post.authorAvatar ||
+            `https://ui-avatars.com/api/?name=${post.author}&background=4284f5&color=fff`
+          }
           alt={post.author}
           sx={{ width: 40, height: 40 }}
         >
