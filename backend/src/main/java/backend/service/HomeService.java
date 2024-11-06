@@ -2,20 +2,20 @@ package backend.service;
 
 import backend.dto.*;
 import backend.entity.*;
-import backend.repository.CommentRepository;
-import backend.repository.RoleRepository;
-import backend.repository.UserRepository;
-import backend.repository.VoteRepository;
+import backend.repository.*;
 import backend.security.JWTGenerator;
 import backend.util.Utils;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,6 +55,12 @@ public class HomeService {
 
     @Autowired
     private CommentRepository commentRepository;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @Autowired
+    private VerificationRepository verificationRepository;
 
 
     public boolean createUser(UserDTO userDTO) {
@@ -192,4 +198,92 @@ public class HomeService {
         }
         return false;
     }
+
+
+    @Transactional
+    public boolean sendCode(String email) {
+        Optional<User> optionalUser = userRepository.findUserByEmail(email);
+        if (optionalUser.isEmpty()) {
+            return false;
+        }
+
+        User user = optionalUser.get();
+
+        String code;
+        Optional<Verification> optionalVerification = verificationRepository
+            .findByUserAndStatusAndExpirationTimeAfter(user, Verification.Status.PENDING, new Date());
+        if (optionalVerification.isPresent()) {
+            code = optionalVerification.get().getCode();
+            emailGenerator(email, code);
+            return true;
+        } else {
+            code = Utils.generateVerificationCode();
+        }
+
+        Verification verification = new Verification();
+        verification.setCode(code);
+        verification.setUser(user);
+        verification.setCreatedTime(new Date());
+
+        // +15 mins
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.MINUTE, 15);
+        verification.setExpirationTime(calendar.getTime());
+
+        verificationRepository.save(verification);
+        emailGenerator(email, code);
+        return true;
+    }
+
+
+    public boolean verifyCode(String code) {
+        Verification verification = verificationRepository.findByCode(code);
+        verification.setStatus(Verification.Status.USED);
+        verificationRepository.save(verification);
+        return true;
+    }
+
+
+    @Transactional
+    public boolean resetPassword(String email, String password) {
+        Optional<User> optionalUser = userRepository.findUserByEmail(email);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+
+            if (verificationRepository.existsByUserAndStatusAndExpirationTimeAfter(user, Verification.Status.USED,
+                    new Date())) {
+                PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+                String encode = passwordEncoder.encode(password);
+                user.setPassword(encode);
+
+                userRepository.save(user);
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
+
+
+    private void emailGenerator(String to, String code) {
+        String content = "Hi,\n\n"
+                   + "We received a request to reset your password. Your verification code is:\n\n"
+                   + code + "\n\n"
+                   + "Please use this code to reset your password. This code will expire in 15 minutes.\n\n"
+                   + "If you did not request a password reset, please ignore this email or contact support.\n\n"
+                   + "Thank you,\n"
+                   + "The Meet Team";
+        SimpleMailMessage message = new SimpleMailMessage();
+
+        message.setTo(to);
+        message.setSubject("Reset Password Notification");
+        message.setText(content);
+        message.setFrom("meet.community.mail@gmail.com");
+
+        mailSender.send(message);
+    }
+
+
+
 }

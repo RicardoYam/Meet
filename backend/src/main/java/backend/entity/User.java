@@ -22,6 +22,7 @@ public class User {
 
     private String username;
 
+    @Column(unique = true)
     private String email;
 
     private String password;
@@ -68,6 +69,9 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "category_id", referencedColumnName = "id")
     )
     private List<Category> categories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Verification> verifications = new ArrayList<>();
 
     private Date createdTime;
 }

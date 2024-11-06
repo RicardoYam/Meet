@@ -4,18 +4,22 @@ import backend.dto.LoginDTO;
 import backend.dto.LoginResponseDTO;
 import backend.dto.ProfileResponseDTO;
 import backend.dto.UserDTO;
+import backend.entity.Verification;
 import backend.repository.UserRepository;
+import backend.repository.VerificationRepository;
 import backend.security.JWTGenerator;
 import backend.service.HomeService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -34,6 +38,9 @@ public class HomeController {
 
     @Autowired
     private JWTGenerator jwtGenerator;
+
+    @Autowired
+    private VerificationRepository verificationRepository;
 
 
     /**
@@ -181,4 +188,40 @@ public class HomeController {
         return new ResponseEntity<>("Please provide a valid token", HttpStatus.BAD_REQUEST);
     }
 
+
+    @GetMapping("/reset-password")
+    public ResponseEntity<?> sendCode(@RequestParam String email) {
+        if (userRepository.existsByEmail(email)) {
+            if (homeService.sendCode(email)) {
+                return new ResponseEntity<>("Code sent", HttpStatus.OK);
+            }
+        }
+        return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> verifyCode(@RequestParam String code) {
+        if (code.isEmpty()) {
+            return new ResponseEntity<>("Code can't be null", HttpStatus.BAD_REQUEST);
+        }
+        if (verificationRepository.existsByCodeAndExpirationTimeIsAfterAndStatus(code, new Date(), Verification.Status.PENDING)) {
+            if (homeService.verifyCode(code)) {
+                return new ResponseEntity<>("Code verified successfully", HttpStatus.OK);
+            }
+            return new ResponseEntity<>("Code verification failed", HttpStatus.UNAUTHORIZED);
+        }
+        return new ResponseEntity<>("Code expired or not found", HttpStatus.NOT_FOUND);
+    }
+
+
+    @PutMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String email, @RequestParam String password) {
+        if (password.isEmpty()) {
+            return new ResponseEntity<>("Password can't be null", HttpStatus.BAD_REQUEST);
+        }
+        if (homeService.resetPassword(email, password)) {
+            return new ResponseEntity<>("Password reset successfully", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Password not found", HttpStatus.NOT_FOUND);
+    }
 }

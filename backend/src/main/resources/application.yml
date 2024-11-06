@@ -24,6 +24,18 @@ spring:
           github:
             clientId: Ov23liiVf5N5o6OGNK0w
             clientSecret: 4d864e7c65d4ce6abf8e2e0a82d0e291bf512ea2
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: meet.community.mail@gmail.com
+    password: iqmiywlescjhipqa
+    protocol: smtp
+    tls: true
+    properties.mail.smtp:
+      auth: true
+      starttls.enable: true
+      ssl.trust: smtp.gmail.com
+
 
 server:
   port: 8080

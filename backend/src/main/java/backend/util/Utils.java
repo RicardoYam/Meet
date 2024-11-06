@@ -13,4 +13,8 @@ public class Utils {
         }
         return user;
     }
+
+    public static String generateVerificationCode() {
+        return String.valueOf((int)(Math.random() * 900000) + 100000);
+    }
 }
