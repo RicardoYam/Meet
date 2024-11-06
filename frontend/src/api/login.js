@@ -13,16 +13,13 @@ export const signup = (username, email, password) => {
 };
 
 export const sendVerificationCode = (email) => {
-  return apiClient.post(`/verification?toEmail=${encodeURIComponent(email)}`);
+  return apiClient.get(`/reset-password?email=${encodeURIComponent(email)}`);
 };
 
-export const codeMatch = (code, userId) => {
-  return apiClient.get(`/community/codeMatch?code=${code}&userId=${userId}`);
+export const codeMatch = (email, code) => {
+  return apiClient.post(`/reset-password?email=${email}&code=${code}`);
 };
 
-export const changePassword = (code, userId, password) => {
-  return apiClient.post(`/changePassword?code=${code}`, {
-    userId: userId,
-    password: password,
-  });
+export const changePassword = (email, password) => {
+  return apiClient.put(`/reset-password?email=${email}&password=${password}`);
 };

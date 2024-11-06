@@ -35,11 +35,10 @@ const ForgotPassword = () => {
     setIsLoading(true);
     try {
       const response = await sendVerificationCode(email);
-      sessionStorage.setItem("userId", response.data.data);
-      if (response.data.code === 200) {
+      if (response.status === 200) {
         setStage(1);
       } else {
-        setError(response.data.msg);
+        setError(response.data.message || "Failed to send verification code");
       }
     } catch (error) {
       setError("We can't find your email. Please try again.");
@@ -52,14 +51,11 @@ const ForgotPassword = () => {
   const handleVerifyCode = async () => {
     setError("");
     try {
-      const response = await codeMatch(
-        code.join(""),
-        sessionStorage.getItem("userId")
-      );
-      if (response.data.code === 200) {
+      const response = await codeMatch(email, code.join(""));
+      if (response.status === 200) {
         setStage(2);
       } else {
-        setError(response.data.msg);
+        setError(response.data.message || "Invalid verification code");
       }
     } catch (error) {
       setError("An error occurred. Please try again.");
@@ -74,16 +70,11 @@ const ForgotPassword = () => {
       return;
     }
     try {
-      const response = await changePassword(
-        code.join(""),
-        sessionStorage.getItem("userId"),
-        newPassword
-      );
-      if (response.data.code === 200) {
-        sessionStorage.removeItem("userId");
+      const response = await changePassword(email, newPassword);
+      if (response.status === 200) {
         setStage(3);
       } else {
-        setError(response.data.msg);
+        setError(response.data.message || "Failed to change password");
       }
     } catch (error) {
       setError("An error occurred. Please try again.");
