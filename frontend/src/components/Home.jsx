@@ -16,60 +16,45 @@ import { getProfile, updateAvatar } from "../api/user";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 
-const UserProfile = ({ username, avatar, likes, comments, posts, userId }) => {
+const UserProfile = ({ username, avatar, likes, comments, posts }) => {
   const navigate = useNavigate();
-
-  const [avatarUrl, setAvatarUrl] = useState(
-    avatar ||
-      `https://ui-avatars.com/api/?name=${username}&background=4284f5&color=fff`
-  );
-  const fileInputRef = useRef(null);
-
-  const handleAvatarClick = () => {
-    fileInputRef.current.click();
-  };
-
-  const handleFileChange = async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      try {
-        const response = await updateAvatar(userId, file);
-
-        if (response.status === 200) {
-          window.location.reload();
-        }
-      } catch (error) {
-        console.error("Error updating avatar:", error);
-      }
-    }
-  };
+  const email =
+    localStorage.getItem("email") || sessionStorage.getItem("email");
 
   return (
     <Box sx={{ mb: 4 }}>
       <Box className="flex flex-col items-center">
-        <Box className="relative">
+        <Box
+          sx={{
+            cursor: "pointer",
+            "&:hover": { opacity: 0.8 },
+          }}
+          onClick={() => navigate(`/profile`)}
+        >
           <Avatar
-            src={avatarUrl}
+            src={
+              avatar ||
+              `https://ui-avatars.com/api/?name=${username}&background=4284f5&color=fff`
+            }
             sx={{ width: 80, height: 80 }}
             className="mb-2"
           />
-          <IconButton
-            size="small"
-            className="absolute bottom-0 right-0 bg-white"
-            onClick={handleAvatarClick}
-            sx={{ padding: "4px" }}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            style={{ display: "none" }}
-            accept="image/*"
-          />
         </Box>
-        <Typography variant="h6">{username}</Typography>
+        <Typography
+          variant="h6"
+          sx={{
+            cursor: "pointer",
+            "&:hover": { color: "primary.main" },
+          }}
+          onClick={() => navigate(`/profile`)}
+        >
+          {username}
+        </Typography>
+        {email && (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {email}
+          </Typography>
+        )}
         <Box className="flex justify-around w-full mt-4">
           <Box className="text-center">
             <Typography variant="h6">{likes}</Typography>
@@ -103,68 +88,80 @@ const UserProfile = ({ username, avatar, likes, comments, posts, userId }) => {
   );
 };
 
-const TopicsList = ({ topics, categories }) => (
-  <Box sx={{ mb: 4 }}>
-    {categories?.length > 0 && (
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h6"
-          sx={{ mb: 2, display: "flex", alignItems: "center" }}
-        >
-          <BookmarkIcon sx={{ mr: 1 }} />
-          Categories you follow
-        </Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-          {categories.map((category, index) => (
-            <Chip
-              key={index}
-              label={category.title}
-              variant="outlined"
-              size="small"
-              sx={{
-                borderRadius: "16px",
-                "&:hover": {
-                  backgroundColor: "primary.main",
-                  color: "white",
-                },
-              }}
-            />
-          ))}
-        </Box>
-      </Box>
-    )}
+const TopicsList = ({ topics, categories }) => {
+  const navigate = useNavigate();
 
-    {topics?.length > 0 && (
-      <Box>
-        <Typography
-          variant="h6"
-          sx={{ mb: 2, display: "flex", alignItems: "center" }}
-        >
-          <LocalOfferIcon sx={{ mr: 1 }} />
-          Topics you follow
-        </Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-          {topics.map((topic, index) => (
-            <Chip
-              key={index}
-              label={`#${topic.title}`}
-              variant="outlined"
-              size="small"
-              sx={{
-                borderRadius: "16px",
-                "&:hover": {
-                  backgroundColor: "primary.main",
-                  color: "white",
-                },
-              }}
-            />
-          ))}
+  if (!topics?.length && !categories?.length) {
+    return null;
+  }
+
+  return (
+    <Box sx={{ mb: 4 }}>
+      {categories?.length > 0 && (
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            variant="h6"
+            sx={{ mb: 2, display: "flex", alignItems: "center" }}
+          >
+            <BookmarkIcon sx={{ mr: 1 }} />
+            Categories you follow
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            {categories.map((category, index) => (
+              <Chip
+                key={index}
+                label={category.title}
+                variant="outlined"
+                size="small"
+                onClick={() => navigate(`/category/${category.title}`)}
+                sx={{
+                  borderRadius: "16px",
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: "primary.main",
+                    color: "white",
+                  },
+                }}
+              />
+            ))}
+          </Box>
         </Box>
-      </Box>
-    )}
-    <Divider sx={{ mt: 4 }} />
-  </Box>
-);
+      )}
+
+      {topics?.length > 0 && (
+        <Box>
+          <Typography
+            variant="h6"
+            sx={{ mb: 2, display: "flex", alignItems: "center" }}
+          >
+            <LocalOfferIcon sx={{ mr: 1 }} />
+            Topics you follow
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            {topics.map((topic, index) => (
+              <Chip
+                key={index}
+                label={`#${topic.title}`}
+                variant="outlined"
+                size="small"
+                onClick={() => navigate(`/tag/${topic.title}`)}
+                sx={{
+                  borderRadius: "16px",
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: "primary.main",
+                    color: "white",
+                  },
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
+      <Divider sx={{ mt: 4 }} />
+    </Box>
+  );
+};
 
 function Home() {
   const [posts, setPosts] = useState([]);
@@ -275,10 +272,9 @@ function Home() {
               likes={currentUser.totalUpVotes}
               comments={currentUser.totalComments}
               posts={currentUser.blogs?.length || 0}
-              userId={currentUser.id}
             />
           )}
-          {(currentUser?.tags || currentUser?.categories) && (
+          {currentUser && (
             <TopicsList
               topics={currentUser.tags}
               categories={currentUser.categories}

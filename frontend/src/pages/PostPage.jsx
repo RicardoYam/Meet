@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getPost, upVotePost, postComment } from "../api/blog";
 import { getProfile } from "../api/user";
 import {
@@ -56,6 +56,7 @@ const organizeComments = (comments) => {
 const Comment = ({ comment, postId, onCommentAdd, setError }) => {
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyContent, setReplyContent] = useState("");
+  const navigate = useNavigate();
 
   const handleReply = async () => {
     if (!replyContent.trim()) return;
@@ -96,11 +97,31 @@ const Comment = ({ comment, postId, onCommentAdd, setError }) => {
             `https://ui-avatars.com/api/?name=${comment.author}&background=4284f5&color=fff`
           }
           alt={comment.author}
-          sx={{ width: 24, height: 24, mr: 1 }}
+          sx={{
+            width: 24,
+            height: 24,
+            mr: 1,
+            cursor: "pointer",
+            "&:hover": {
+              opacity: 0.8,
+            },
+          }}
+          onClick={() => navigate(`/profile/${comment.author}`)}
         >
           {comment.author[0].toUpperCase()}
         </Avatar>
-        <Typography variant="subtitle2">{comment.author}</Typography>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            cursor: "pointer",
+            "&:hover": {
+              color: "primary.main",
+            },
+          }}
+          onClick={() => navigate(`/profile/${comment.author}`)}
+        >
+          {comment.author}
+        </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
           {formatRelativeTime(comment.createdTime)}
         </Typography>
@@ -266,6 +287,7 @@ function PostPage() {
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const userId = localStorage.getItem("id") || sessionStorage.getItem("id");
   const username =
@@ -362,12 +384,30 @@ function PostPage() {
             `https://ui-avatars.com/api/?name=${post.author}&background=4284f5&color=fff`
           }
           alt={post.author}
-          sx={{ width: 40, height: 40 }}
+          sx={{
+            width: 40,
+            height: 40,
+            cursor: "pointer",
+            "&:hover": {
+              opacity: 0.8,
+            },
+          }}
+          onClick={() => navigate(`/profile/${post.author}`)}
         >
           {post.author[0].toUpperCase()}
         </Avatar>
         <Box ml={2}>
-          <Typography variant="subtitle1" fontWeight="bold">
+          <Typography
+            variant="subtitle1"
+            fontWeight="bold"
+            sx={{
+              cursor: "pointer",
+              "&:hover": {
+                color: "primary.main",
+              },
+            }}
+            onClick={() => navigate(`/profile/${post.author}`)}
+          >
             {post.author}
           </Typography>
           <Typography variant="caption" color="text.secondary">

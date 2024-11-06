@@ -137,9 +137,31 @@ const PostCard = ({
                   avatar ||
                   `https://ui-avatars.com/api/?name=${author}&background=4284f5&color=fff`
                 }
-                sx={{ width: 24, height: 24, mr: 1 }}
+                sx={{
+                  width: 24,
+                  height: 24,
+                  mr: 1,
+                  cursor: "pointer",
+                  "&:hover": { opacity: 0.8 },
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/profile/${author}`);
+                }}
               />
-              <Typography variant="body2" sx={{ fontWeight: 500, mr: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  mr: 1,
+                  cursor: "pointer",
+                  "&:hover": { color: "primary.main" },
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/profile/${author}`);
+                }}
+              >
                 {author}
               </Typography>
               <Typography variant="body2" color="text.secondary">

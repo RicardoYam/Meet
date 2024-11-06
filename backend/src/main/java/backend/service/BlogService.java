@@ -3,10 +3,12 @@ package backend.service;
 import backend.dto.*;
 import backend.entity.*;
 import backend.repository.*;
+import backend.specification.BlogSpecification;
 import backend.util.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -91,6 +93,28 @@ public class BlogService {
     }
 
 
+    public boolean unFollowACategory(Integer categoryId, Integer userId) {
+        Optional<User> optionalUser = userRepository.findUserById(userId.longValue());
+        if (optionalUser.isEmpty()) {
+            return false;
+        }
+
+        Optional<Category> optionalCategory = categoryRepository.findById(categoryId.longValue());
+        if (optionalCategory.isEmpty()) {
+            return false;
+        }
+
+        User user = optionalUser.get();
+        Category category = optionalCategory.get();
+        if (user.getCategories().contains(category)) {
+            user.getCategories().remove(category);
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
+
     public boolean createTag(TagDTO tagDTO) {
         Tag tag = new Tag();
         tag.setTitle(tagDTO.getTitle());
@@ -145,6 +169,28 @@ public class BlogService {
     }
 
 
+    public boolean unFollowATag(Integer tagId, Integer userId) {
+        Optional<User> optionalUser = userRepository.findUserById(userId.longValue());
+        if (optionalUser.isEmpty()) {
+            return false;
+        }
+
+        Optional<Tag> optionalTag = tagRepository.findById(tagId.longValue());
+        if (optionalTag.isEmpty()) {
+            return false;
+        }
+
+        User user = optionalUser.get();
+        Tag tag = optionalTag.get();
+        if (user.getTags().contains(tag)) {
+            user.getTags().remove(tag);
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
+
     @Transactional
     public boolean createBlog(BlogDTO blogDTO) {
         Blog blog = new Blog();
@@ -178,8 +224,18 @@ public class BlogService {
 
 
     @Transactional
-    public Page<BlogListResponseDTO> getAllBlogs(Pageable pageable) {
-        Page<Blog> blogPage = blogRepository.findAll(pageable);
+    public Page<BlogListResponseDTO> getAllBlogs(Pageable pageable, String category, String tag) {
+        Specification<Blog> specification = Specification.where((root, query, criteriaBuilder) -> criteriaBuilder.conjunction());
+
+        if (category != null && !category.isEmpty()) {
+            specification = specification.and(BlogSpecification.hasCategory(category));
+        }
+
+        if (tag != null && !tag.isEmpty()) {
+            specification = specification.and(BlogSpecification.hasTag(tag));
+        }
+
+        Page<Blog> blogPage = blogRepository.findAll(specification, pageable);
         return blogPage.map(this::convertBlogToDTO);
     }
 
@@ -307,4 +363,7 @@ public class BlogService {
         commentRepository.save(newComment);
         return true;
     }
+
+
+
 }

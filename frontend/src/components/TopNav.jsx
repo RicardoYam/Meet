@@ -66,7 +66,7 @@ function TopNav() {
 
   const handleProfileClick = () => {
     handleMenuClose();
-    navigate("/profile");
+    navigate(`/profile`);
   };
 
   return (
@@ -170,24 +170,6 @@ function TopNav() {
                         sessionStorage.getItem("email")}
                     </Typography>
                   </Box>
-                </MenuItem>
-                <MenuItem>
-                  <ListItemIcon>
-                    <StoreIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Your Shop</ListItemText>
-                </MenuItem>
-                <MenuItem>
-                  <ListItemIcon>
-                    <DescriptionIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Documentation</ListItemText>
-                </MenuItem>
-                <MenuItem>
-                  <ListItemIcon>
-                    <SettingsIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Settings</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>
                   <ListItemIcon>

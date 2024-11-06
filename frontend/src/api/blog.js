@@ -24,8 +24,25 @@ export const createPost = async (postData) => {
   }
 };
 
-export const getAllPosts = (page, size) => {
-  return apiClient.get(`/posts?page=${page}&size=${size}`);
+export const getAllPosts = (
+  page,
+  size,
+  categoryTitle = null,
+  tagTitle = null
+) => {
+  let url = `/posts?page=${page}&size=${size}`;
+
+  // Add category filter if provided
+  if (categoryTitle) {
+    url += `&category=${categoryTitle}`;
+  }
+
+  // Add tag filter if provided
+  if (tagTitle) {
+    url += `&tag=${tagTitle}`;
+  }
+
+  return apiClient.get(url);
 };
 
 export const getPost = (postId) => {

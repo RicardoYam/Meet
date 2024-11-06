@@ -1,18 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
   Avatar,
-  Button,
   Grid,
   Paper,
   IconButton,
+  Divider,
+  Chip,
 } from "@mui/material";
 import PostCard from "../components/PostCard";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import StarIcon from "@mui/icons-material/Star";
+import EditIcon from "@mui/icons-material/Edit";
+import { getProfile, updateAvatar } from "../api/user";
 
 const generateRandomGradient = () => {
   const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8"];
@@ -22,32 +24,76 @@ const generateRandomGradient = () => {
 };
 
 const ProfilePage = () => {
+  const { username: profileUsername } = useParams(); // Get username from URL
   const [gradient, setGradient] = useState("");
-  const [posts, setPosts] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const fileInputRef = useRef(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const navigate = useNavigate();
+
+  // Get current user's username
+  const currentUsername =
+    localStorage.getItem("username") || sessionStorage.getItem("username");
+
+  // Determine if this is the current user's profile
+  const isCurrentUser = !profileUsername || profileUsername === currentUsername;
+
+  // Use the appropriate username for fetching profile
+  const targetUsername = isCurrentUser ? currentUsername : profileUsername;
 
   useEffect(() => {
     setGradient(generateRandomGradient());
-    // Fetch user posts here
-    setPosts([
-      {
-        username: "Raj Mishra",
-        handle: "coachraj",
-        content: "Just finished an amazing training session!",
-        images: ["https://source.unsplash.com/random/800x600?fitness"],
-        likes: 42,
-        comments: 7,
-      },
-      {
-        username: "Raj Mishra",
-        handle: "coachraj",
-        content:
-          "Here's a quick tip for staying motivated: set small, achievable goals!",
-        images: [],
-        likes: 31,
-        comments: 5,
-      },
-    ]);
-  }, []);
+
+    const fetchProfile = async () => {
+      try {
+        const response = await getProfile(targetUsername);
+        if (response.status === 200) {
+          setUserProfile(response.data);
+          setAvatarUrl(
+            response.data.avatar ||
+              `https://ui-avatars.com/api/?name=${response.data.name}&background=4284f5&color=fff`
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (targetUsername) {
+      fetchProfile();
+    }
+  }, [targetUsername]);
+
+  const handleAvatarClick = () => {
+    if (isCurrentUser) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        const response = await updateAvatar(userProfile.id, file);
+        if (response.status === 200) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setAvatarUrl(reader.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      } catch (error) {
+        console.error("Error updating avatar:", error);
+      }
+    }
+  };
+
+  if (loading || !userProfile) {
+    return <Typography>Loading...</Typography>;
+  }
 
   return (
     <Box>
@@ -63,107 +109,206 @@ const ProfilePage = () => {
                 mb={2}
               >
                 <Box display="flex" alignItems="center">
-                  <Avatar
-                    src="https://source.unsplash.com/random/150x150?face"
-                    sx={{ width: 120, height: 120, mr: 3 }}
-                  />
+                  <Box sx={{ position: "relative" }}>
+                    <Avatar
+                      src={avatarUrl}
+                      sx={{ width: 120, height: 120, mr: 3 }}
+                    />
+                    {isCurrentUser && (
+                      <>
+                        <IconButton
+                          size="small"
+                          sx={{
+                            position: "absolute",
+                            bottom: 0,
+                            right: 24,
+                            backgroundColor: "white",
+                            "&:hover": { backgroundColor: "#f5f5f5" },
+                            padding: "4px",
+                          }}
+                          onClick={handleAvatarClick}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                          style={{ display: "none" }}
+                          accept="image/*"
+                        />
+                      </>
+                    )}
+                  </Box>
                   <Box>
                     <Typography variant="h4" fontWeight="bold">
-                      Raj Mishra
+                      {userProfile.name}
                     </Typography>
-                    <Typography variant="body1" color="textSecondary">
-                      @coachraj
-                    </Typography>
-                    <Typography variant="body2" mt={1}>
-                      My clients describe my training style as motivating and
-                      life-changing.
-                    </Typography>
+                    {isCurrentUser && (
+                      <Typography variant="body1" color="text.secondary">
+                        {localStorage.getItem("email") ||
+                          sessionStorage.getItem("email")}
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
-                <IconButton>
-                  <MoreHorizIcon />
-                </IconButton>
+                {isCurrentUser && (
+                  <IconButton>
+                    <MoreHorizIcon />
+                  </IconButton>
+                )}
               </Box>
               <Box display="flex" mb={2}>
                 <Box display="flex" alignItems="center" mr={3}>
-                  <LocationOnIcon fontSize="small" sx={{ mr: 0.5 }} />
-                  <Typography variant="body2">San Francisco, CA</Typography>
-                </Box>
-                <Box display="flex" alignItems="center" mr={3}>
                   <CalendarTodayIcon fontSize="small" sx={{ mr: 0.5 }} />
-                  <Typography variant="body2">Joined April 2021</Typography>
-                </Box>
-                <Box display="flex" alignItems="center">
-                  <StarIcon fontSize="small" sx={{ mr: 0.5 }} />
-                  <Typography variant="body2">5.0 (121)</Typography>
+                  <Typography variant="body2">
+                    Joined{" "}
+                    {new Date(userProfile.createdTime).toLocaleDateString(
+                      "en-US",
+                      { month: "long", year: "numeric" }
+                    )}
+                  </Typography>
                 </Box>
               </Box>
             </Paper>
+
             <Typography variant="h5" fontWeight="bold" mb={2}>
               Posts
             </Typography>
-            {posts.map((post, index) => (
-              <PostCard key={index} {...post} />
+            {userProfile.blogs?.map((post, index) => (
+              <React.Fragment key={post.id}>
+                <PostCard
+                  id={post.id}
+                  title={post.title}
+                  content={post.content}
+                  author={userProfile.name}
+                  avatar={userProfile.avatar}
+                  categories={post.categories}
+                  tags={post.tags}
+                  upVotes={post.upVotes}
+                  comments={post.comments}
+                  createdTime={post.createdTime}
+                />
+                {index < userProfile.blogs.length - 1 && (
+                  <Divider sx={{ my: 4 }} />
+                )}
+              </React.Fragment>
             ))}
           </Grid>
+
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 4 }}>
-              <Button
-                variant="contained"
-                fullWidth
-                sx={{ mb: 2, textTransform: "none", fontWeight: "bold" }}
-              >
-                Book a session
-              </Button>
-              <Button
-                variant="outlined"
-                fullWidth
-                sx={{ mb: 2, textTransform: "none" }}
-              >
-                Message
-              </Button>
-              <Typography variant="body2" align="center" color="textSecondary">
-                Profile views: 1,234
+              <Typography variant="h6" gutterBottom>
+                Stats
               </Typography>
-            </Paper>
-            <Paper elevation={3} sx={{ p: 3, borderRadius: 4 }}>
               <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid item xs={4}>
                   <Typography
                     variant="h4"
                     align="center"
                     fontWeight="bold"
                     color="primary"
                   >
-                    351
+                    {userProfile.totalUpVotes}
                   </Typography>
                   <Typography
                     variant="body2"
                     align="center"
                     color="textSecondary"
                   >
-                    Completed Sessions
+                    Likes
                   </Typography>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid item xs={4}>
                   <Typography
                     variant="h4"
                     align="center"
                     fontWeight="bold"
                     color="primary"
                   >
-                    2+
+                    {userProfile.totalComments}
                   </Typography>
                   <Typography
                     variant="body2"
                     align="center"
                     color="textSecondary"
                   >
-                    Years Experience
+                    Comments
+                  </Typography>
+                </Grid>
+                <Grid item xs={4}>
+                  <Typography
+                    variant="h4"
+                    align="center"
+                    fontWeight="bold"
+                    color="primary"
+                  >
+                    {userProfile.blogs?.length || 0}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    align="center"
+                    color="textSecondary"
+                  >
+                    Posts
                   </Typography>
                 </Grid>
               </Grid>
             </Paper>
+
+            {/* Followed Categories */}
+            {userProfile.categories?.length > 0 && (
+              <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 4 }}>
+                <Typography variant="h6" gutterBottom>
+                  Following Categories
+                </Typography>
+                <Box display="flex" flexWrap="wrap" gap={1}>
+                  {userProfile.categories.map((category) => (
+                    <Chip
+                      key={category.id}
+                      label={category.title}
+                      variant="outlined"
+                      onClick={() => navigate(`/category/${category.title}`)}
+                      sx={{
+                        borderRadius: "16px",
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "primary.main",
+                          color: "white",
+                        },
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Paper>
+            )}
+
+            {/* Followed Topics */}
+            {userProfile.tags?.length > 0 && (
+              <Paper elevation={3} sx={{ p: 3, borderRadius: 4 }}>
+                <Typography variant="h6" gutterBottom>
+                  Following Topics
+                </Typography>
+                <Box display="flex" flexWrap="wrap" gap={1}>
+                  {userProfile.tags.map((tag) => (
+                    <Chip
+                      key={tag.id}
+                      label={`#${tag.title}`}
+                      variant="outlined"
+                      onClick={() => navigate(`/tag/${tag.title}`)}
+                      sx={{
+                        borderRadius: "16px",
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "primary.main",
+                          color: "white",
+                        },
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Paper>
+            )}
           </Grid>
         </Grid>
       </Box>

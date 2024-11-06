@@ -14,7 +14,10 @@ import Home from "./components/Home";
 import Profile from "./pages/ProfilePage";
 import CreatePost from "./pages/CreatePost";
 import PostPage from "./pages/PostPage";
+import Categories from "./components/Categories";
+import Topics from "./components/Topics";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import Collection from "./pages/Collection";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -26,8 +29,13 @@ createRoot(document.getElementById("root")).render(
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:username" element={<Profile />} />
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/posts/:postId" element={<PostPage />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/topics" element={<Topics />} />
+          <Route path="/category/:title" element={<Collection />} />
+          <Route path="/tag/:title" element={<Collection />} />
         </Routes>
       </Layout>
     </BrowserRouter>
