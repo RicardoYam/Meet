@@ -14,6 +14,10 @@ public class ProfileResponseDTO {
 
     private String avatar;
 
+    private String banner;
+
+    private String bio;
+
     private List<BlogResponseDTO> blogs;
 
     private List<CategoryResponseDTO> categories;
@@ -21,6 +25,10 @@ public class ProfileResponseDTO {
     private List<TagResponseDTO> tags;
 
     private List<VoteResponseDTO> votes;
+
+    private List<FollowResponseDTO> following;
+
+    private List<FollowResponseDTO> follower;
 
     private Integer totalUpVotes;
 

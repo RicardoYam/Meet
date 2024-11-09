@@ -241,6 +241,21 @@ public class BlogService {
 
 
     @Transactional
+    public Page<BlogListResponseDTO> searchBlogs(Pageable pageable, String searchTerm) {
+        Specification<Blog> specification = Specification.where(null);
+
+        if (searchTerm != null && !searchTerm.isEmpty()) {
+            specification =
+                    specification.or(BlogSpecification.containsTitle(searchTerm)).
+                            or(BlogSpecification.hasAuthor(searchTerm));
+        }
+
+        Page<Blog> blogPage = blogRepository.findAll(specification, pageable);
+        return blogPage.map(this::convertBlogToDTO);
+    }
+
+
+    @Transactional
     public BlogResponseDTO getOneBlog(Integer id) {
         Long l = id.longValue();
         Optional<Blog> blogOptional = blogRepository.findById(l);

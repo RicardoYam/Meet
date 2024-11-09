@@ -28,21 +28,25 @@ export const getAllPosts = (
   page,
   size,
   categoryTitle = null,
-  tagTitle = null
+  tagTitle = null,
+  sortBy = "",
+  sortDir = ""
 ) => {
-  let url = `/posts?page=${page}&size=${size}`;
+  let url = `/posts?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
 
-  // Add category filter if provided
   if (categoryTitle) {
     url += `&category=${categoryTitle}`;
   }
 
-  // Add tag filter if provided
   if (tagTitle) {
     url += `&tag=${tagTitle}`;
   }
 
   return apiClient.get(url);
+};
+
+export const getPostsBySearchTerm = (searchTerm) => {
+  return apiClient.get(`/posts/search?searchTerm=${searchTerm}`);
 };
 
 export const getPost = (postId) => {

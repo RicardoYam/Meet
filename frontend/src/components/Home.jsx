@@ -1,80 +1,160 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
   Button,
   Avatar,
-  IconButton,
+  Select,
   Divider,
   Chip,
+  MenuItem,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import PostCard from "./PostCard";
 import { useNavigate } from "react-router-dom";
 import { getAllPosts } from "../api/blog";
-import { getProfile, updateAvatar } from "../api/user";
+import { getProfile } from "../api/user";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 
-const UserProfile = ({ username, avatar, likes, comments, posts }) => {
+const UserProfile = ({ username, avatar, likes, comments, posts, bio }) => {
   const navigate = useNavigate();
   const email =
     localStorage.getItem("email") || sessionStorage.getItem("email");
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    if (username) {
+      getProfile(username).then((response) => {
+        if (response.status === 200) {
+          setUserProfile(response.data);
+        }
+      });
+    }
+  }, [username]);
 
   return (
-    <Box sx={{ mb: 4 }}>
-      <Box className="flex flex-col items-center">
+    <Box
+      sx={{
+        mb: 4,
+        backgroundColor: "white",
+        borderRadius: "16px",
+        overflow: "hidden",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+        border: "1px solid #ececee",
+      }}
+    >
+      {/* Banner */}
+      <Box
+        sx={{
+          height: "80px",
+          background: userProfile?.banner
+            ? `url(${userProfile.banner}) center/cover`
+            : "linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)",
+          position: "relative",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          margin: "10px 10px 0 10px",
+          borderRadius: "16px 16px 0 0",
+        }}
+      />
+
+      {/* Profile Content */}
+      <Box sx={{ padding: "0 20px 20px" }}>
+        {/* Avatar */}
         <Box
           sx={{
-            cursor: "pointer",
-            "&:hover": { opacity: 0.8 },
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            marginTop: "-40px",
           }}
-          onClick={() => navigate(`/profile`)}
         >
           <Avatar
             src={
               avatar ||
               `https://ui-avatars.com/api/?name=${username}&background=4284f5&color=fff`
             }
-            sx={{ width: 80, height: 80 }}
-            className="mb-2"
+            sx={{
+              width: 80,
+              height: 80,
+              border: "4px solid white",
+              cursor: "pointer",
+              marginBottom: 1,
+            }}
+            onClick={() => navigate(`/profile`)}
           />
-        </Box>
-        <Typography
-          variant="h6"
-          sx={{
-            cursor: "pointer",
-            "&:hover": { color: "primary.main" },
-          }}
-          onClick={() => navigate(`/profile`)}
-        >
-          {username}
-        </Typography>
-        {email && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {email}
+          <Typography
+            variant="h6"
+            sx={{
+              color: "black",
+              cursor: "pointer",
+              "&:hover": { color: "primary.main" },
+              fontWeight: "bold",
+            }}
+            onClick={() => navigate(`/profile`)}
+          >
+            {username}
           </Typography>
-        )}
-        <Box className="flex justify-around w-full mt-4">
-          <Box className="text-center">
-            <Typography variant="h6">{likes}</Typography>
-            <Typography variant="body2" color="text.secondary">
+
+          {bio ? (
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                textAlign: "center",
+              }}
+            >
+              {bio}
+            </Typography>
+          ) : (
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                textAlign: "center",
+                fontStyle: "italic",
+              }}
+            >
+              Oops, no bio written
+            </Typography>
+          )}
+        </Box>
+
+        {/* Stats */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-around",
+            my: 2,
+          }}
+        >
+          <Box sx={{ textAlign: "center" }}>
+            <Typography variant="h6" sx={{ color: "black" }}>
+              {likes}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
               likes
             </Typography>
           </Box>
-          <Box className="text-center">
-            <Typography variant="h6">{comments}</Typography>
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ textAlign: "center" }}>
+            <Typography variant="h6" sx={{ color: "black" }}>
+              {comments}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
               comments
             </Typography>
           </Box>
-          <Box className="text-center">
-            <Typography variant="h6">{posts}</Typography>
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ textAlign: "center" }}>
+            <Typography variant="h6" sx={{ color: "black" }}>
+              {posts}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
               posts
             </Typography>
           </Box>
         </Box>
+
+        {/* Create Post Button */}
         <Button
           variant="contained"
           className="mt-4 bg-purple-600 w-full hover:bg-purple-700"
@@ -83,7 +163,6 @@ const UserProfile = ({ username, avatar, likes, comments, posts }) => {
           Create Post
         </Button>
       </Box>
-      <Divider sx={{ mt: 4 }} />
     </Box>
   );
 };
@@ -173,9 +252,17 @@ function Home() {
     last: false,
   });
   const [currentUser, setCurrentUser] = useState(null);
+  const [sortBy, setSortBy] = useState("Newest");
+
+  const sortOptions = {
+    Newest: { sortBy: "createdTime", sortDir: "desc" },
+    Oldest: { sortBy: "createdTime", sortDir: "asc" },
+    "Most Liked": { sortBy: "votes", sortDir: "asc" },
+  };
 
   useEffect(() => {
-    getAllPosts(0, 5).then((response) => {
+    const { sortBy: apiSortBy, sortDir } = sortOptions[sortBy];
+    getAllPosts(0, 5, null, null, apiSortBy, sortDir).then((response) => {
       if (response.status === 200) {
         const data = response.data;
         setPosts(data.content);
@@ -196,11 +283,23 @@ function Home() {
         setCurrentUser(response.data);
       }
     });
-  }, []);
+  }, [sortBy]);
+
+  const handleSortChange = (event) => {
+    setSortBy(event.target.value);
+  };
 
   const loadMorePosts = () => {
     if (!pageInfo.last) {
-      getAllPosts(pageInfo.number + 1, pageInfo.size).then((response) => {
+      const { sortBy: apiSortBy, sortDir } = sortOptions[sortBy];
+      getAllPosts(
+        pageInfo.number + 1,
+        pageInfo.size,
+        null,
+        null,
+        apiSortBy,
+        sortDir
+      ).then((response) => {
         if (response.status === 200) {
           const data = response.data;
           setPosts((prevPosts) => [...prevPosts, ...data.content]);
@@ -217,16 +316,40 @@ function Home() {
   };
 
   return (
-    <Box className="py-8">
+    <Box>
       <Box className="flex flex-col md:flex-row">
         {posts?.length > 0 ? (
           <Box
-            className="w-full mx-8 md:w-2/3"
+            className="w-full mx-8 md:w-3/4"
             sx={{
               borderRight: "1px solid #eee",
               pr: 3,
             }}
           >
+            <Box className="flex justify-between items-center align-middle mt-4">
+              <Typography variant="h6">Articles</Typography>
+              <Select
+                value={sortBy}
+                onChange={handleSortChange}
+                sx={{
+                  width: "120px",
+                  height: "40px",
+                  borderRadius: "20px",
+                  fontSize: "14px",
+                }}
+              >
+                {Object.keys(sortOptions).map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
+
+            <Divider
+              sx={{ mt: 2, mb: 4, borderColor: "#ececee", borderWidth: 1 }}
+            />
+
             {posts.map((post, index) => (
               <React.Fragment key={post.id}>
                 <PostCard
@@ -243,7 +366,9 @@ function Home() {
                   votes={post.votes}
                 />
                 {index < posts.length - 1 && (
-                  <Divider sx={{ my: 4, borderColor: "#eee" }} />
+                  <Divider
+                    sx={{ my: 4, borderColor: "#ececee", borderWidth: 1 }}
+                  />
                 )}
               </React.Fragment>
             ))}
@@ -259,12 +384,12 @@ function Home() {
             )}
           </Box>
         ) : (
-          <Box className="w-full md:w-2/3">
+          <Box className="w-full md:w-3/4">
             <Typography variant="h6">No posts found</Typography>
           </Box>
         )}
 
-        <Box className="w-full pr-8 md:w-1/3 mt-4 md:mt-0">
+        <Box className="w-full pr-8 md:w-1/4 mt-4 md:mt-0">
           {currentUser && (
             <UserProfile
               username={currentUser.name}
@@ -272,6 +397,7 @@ function Home() {
               likes={currentUser.totalUpVotes}
               comments={currentUser.totalComments}
               posts={currentUser.blogs?.length || 0}
+              bio={currentUser.bio}
             />
           )}
           {currentUser && (

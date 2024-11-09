@@ -106,7 +106,9 @@ public class HomeService {
 
             response.setId(user.getId());
             response.setName(user.getUsername());
+            response.setBio(user.getBio());
             response.setAvatar(Utils.getImageData(user).getAvatarData());
+            response.setBanner(Utils.getBannerDate(user).getBannerData());
 
             // all posts of the specific user
             List<Blog> blogs = user.getBlogs();
@@ -158,6 +160,26 @@ public class HomeService {
             }
             response.setVotes(voteResponseDTOList);
 
+            // Following list
+            List<FollowResponseDTO> followingList = new ArrayList<>();
+            for (User u : user.getFollowing()) {
+                FollowResponseDTO followingUser = new FollowResponseDTO();
+                followingUser.setId(u.getId());
+                followingUser.setName(u.getUsername());
+                followingList.add(followingUser);
+            }
+            response.setFollowing(followingList);
+
+            // Follower list
+            List<FollowResponseDTO> followerList = new ArrayList<>();
+            for (User u : user.getFollowers()) {
+                FollowResponseDTO follower = new FollowResponseDTO();
+                follower.setId(u.getId());
+                follower.setName(u.getUsername());
+                followerList.add(follower);
+            }
+            response.setFollower(followerList);
+
             // TODO: After implement upvote function, check response
             response.setTotalUpVotes(voteRepository.countVotesByUser_IdAndUpVoteIsTrueAndStatusIsTrue(user.getId()));
 
@@ -181,6 +203,24 @@ public class HomeService {
 
 
     @Transactional
+    public boolean updateUserInfo(UserInfoDTO userInfoDTO) {
+        try {
+            Optional<User> optionalUser = userRepository.findUserById(userInfoDTO.getId().longValue());
+            if (optionalUser.isPresent()) {
+                User user = optionalUser.get();
+                user.setUsername(userInfoDTO.getUsername());
+                user.setBio(userInfoDTO.getBio());
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
+        }
+    }
+
+
+    @Transactional
     public boolean updateAvatar(Integer userId, MultipartFile avatar) throws IOException {
         String imageName = avatar.getName();
         String imageType = avatar.getContentType();
@@ -195,6 +235,94 @@ public class HomeService {
             user.setAvatarBlob(imageBlob);
             userRepository.save(user);
             return true;
+        }
+        return false;
+    }
+
+
+    @Transactional
+    public boolean updateBanner(Integer userId, MultipartFile banner) throws IOException {
+        String imageName = banner.getName();
+        String imageType = banner.getContentType();
+        byte[] imageBlob = banner.getBytes();
+
+        Optional<User> optionalUser = userRepository.findUserById(userId.longValue());
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+
+            user.setBannerName(imageName);
+            user.setBannerType(imageType);
+            user.setBannerBlob(imageBlob);
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
+
+    @Transactional
+    public boolean followAUser(Long id, Long targetId) {
+        Optional<User> optionalUser = userRepository.findUserById(id);
+        if (optionalUser.isPresent()) {
+            User currentUser = optionalUser.get();
+            try {
+                Optional<User> optionalTargetUser = userRepository.findUserById(targetId);
+                if (optionalTargetUser.isPresent()) {
+                    User targetUser = optionalTargetUser.get();
+
+                    // current user follow the target user
+                    List<User> currentFollowing = currentUser.getFollowing();
+                    currentFollowing.add(targetUser);
+
+                    // target user add the current follower
+                    List<User> targetFollowers = targetUser.getFollowers();
+                    targetFollowers.add(currentUser);
+
+                    currentUser.setFollowing(currentFollowing);
+                    targetUser.setFollowers(targetFollowers);
+                    userRepository.save(currentUser);
+                    userRepository.save(targetUser);
+                    return true;
+                }
+                return false;
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                return false;
+            }
+        }
+        return false;
+    }
+
+
+    @Transactional
+    public boolean unFollowAUser(Long id, Long targetId) {
+        Optional<User> optionalUser = userRepository.findUserById(id);
+        if (optionalUser.isPresent()) {
+            User currentUser = optionalUser.get();
+            try {
+                Optional<User> optionalTargetUser = userRepository.findUserById(targetId);
+                if (optionalTargetUser.isPresent()) {
+                    User targetUser = optionalTargetUser.get();
+
+                    // current user unfollow the target user
+                    List<User> currentFollowing = currentUser.getFollowing();
+                    currentFollowing.remove(targetUser);
+
+                    // target user remove the current follower
+                    List<User> targetFollowers = targetUser.getFollowers();
+                    targetFollowers.remove(currentUser);
+
+                    currentUser.setFollowing(currentFollowing);
+                    targetUser.setFollowers(targetFollowers);
+                    userRepository.save(currentUser);
+                    userRepository.save(targetUser);
+                    return true;
+                }
+                return false;
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                return false;
+            }
         }
         return false;
     }
@@ -283,7 +411,4 @@ public class HomeService {
 
         mailSender.send(message);
     }
-
-
-
 }

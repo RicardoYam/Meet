@@ -16,7 +16,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
+        format_sql: true
+        show-sql: true
   security:
     oauth2:
       client:
@@ -35,7 +36,14 @@ spring:
       auth: true
       starttls.enable: true
       ssl.trust: smtp.gmail.com
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
 
 server:
   port: 8080
+logging:
+  level:
+    org.hibernate.orm.jdbc.bind: TRACE

@@ -14,6 +14,14 @@ public class Utils {
         return user;
     }
 
+    public static User getBannerDate(User user) {
+        if (user.getBannerBlob() != null) {
+            String base64Image = Base64.getEncoder().encodeToString(user.getBannerBlob());
+            user.setBannerData("data:" + user.getBannerType() + ";base64," + base64Image);
+        }
+        return user;
+    }
+
     public static String generateVerificationCode() {
         return String.valueOf((int)(Math.random() * 900000) + 100000);
     }

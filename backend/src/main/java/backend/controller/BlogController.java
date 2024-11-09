@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,13 @@ public class BlogController {
 
     @Autowired
     private TagRepository tagRepository;
+
     @Autowired
     private BlogRepository blogRepository;
+
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private CommentRepository commentRepository;
+
 
     @PostMapping("/categories")
     public ResponseEntity<String> addCategory(@RequestBody CategoryDTO categoryDTO) {
@@ -184,6 +186,7 @@ public class BlogController {
         }
     }
 
+
     @PostMapping("/posts")
     public ResponseEntity<?> createBlog(@RequestBody BlogDTO blogDTO) {
         if (blogDTO.getTitle() == null || blogDTO.getTitle().isEmpty()) {
@@ -214,9 +217,27 @@ public class BlogController {
     public ResponseEntity<?> getAllBlogs(@RequestParam(defaultValue = "0") int page,
                                          @RequestParam(defaultValue = "5") int size,
                                          @RequestParam(required = false) String category,
-                                         @RequestParam(required = false) String tag) {
-        Pageable pageable = PageRequest.of(page, size);
+                                         @RequestParam(required = false) String tag,
+                                         @RequestParam(defaultValue = "createdTime") String sortBy,
+                                         @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
         Page<BlogListResponseDTO> blogs = blogService.getAllBlogs(pageable, category, tag);
+        if (!blogs.hasContent()) {
+            return new ResponseEntity<>("No blogs found", HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(blogs, HttpStatus.OK);
+    }
+
+
+    @GetMapping("/posts/search")
+    public ResponseEntity<?> searchBlogs(@RequestParam(defaultValue = "0") int page,
+                                         @RequestParam(defaultValue = "5") int size,
+                                         @RequestParam String searchTerm) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<BlogListResponseDTO> blogs = blogService.searchBlogs(pageable, searchTerm);
+
         if (!blogs.hasContent()) {
             return new ResponseEntity<>("No blogs found", HttpStatus.NO_CONTENT);
         }

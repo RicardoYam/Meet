@@ -37,6 +37,18 @@ public class User {
     @Transient
     private String avatarData;
 
+    private String bannerName;
+
+    private String bannerType;
+
+    @Lob
+    private byte[] bannerBlob;
+
+    @Transient
+    private String bannerData;
+
+    private String bio;
+
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
@@ -72,6 +84,17 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Verification> verifications = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_following",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "following_user_id")
+    )
+    private List<User> following = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "following")
+    private List<User> followers = new ArrayList<>();
 
     private Date createdTime;
 }

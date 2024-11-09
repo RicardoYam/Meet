@@ -15,7 +15,22 @@ export const updateAvatar = (userId, avatarFile) => {
   const token =
     localStorage.getItem("token") || sessionStorage.getItem("token");
 
-  return apiClient.put(`/profile?userId=${userId}`, formData, {
+  return apiClient.put(`/profile/avatar?userId=${userId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `${token}`,
+    },
+  });
+};
+
+export const updateBanner = (userId, bannerFile) => {
+  const formData = new FormData();
+  formData.append("banner", bannerFile);
+
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+
+  return apiClient.put(`/profile/banner?userId=${userId}`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
       Authorization: `${token}`,
@@ -64,5 +79,37 @@ export const unfollowTopic = async (topicId) => {
     headers: {
       Authorization: `${token}`,
     },
+  });
+};
+
+export const updateBio = async (userId, username, bio) => {
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+
+  const formData = new FormData();
+  formData.append("userId", userId);
+  formData.append("username", username);
+  formData.append("bio", bio);
+
+  return apiClient.put(`/profile`, formData, {
+    headers: {
+      Authorization: `${token}`,
+    },
+  });
+};
+
+export const followUser = async (userId, targetId) => {
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+  return apiClient.post(`/follow/${userId}?targetId=${targetId}`, null, {
+    headers: { Authorization: `${token}` },
+  });
+};
+
+export const unfollowUser = async (userId, targetId) => {
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+  return apiClient.delete(`/follow/${userId}?targetId=${targetId}`, null, {
+    headers: { Authorization: `${token}` },
   });
 };
