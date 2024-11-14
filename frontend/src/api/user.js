@@ -1,9 +1,26 @@
 import apiClient from "./base";
+import axios from "axios";
 
 export const getProfile = (username) => {
   return apiClient.get(`/profile`, {
     params: {
       username: username,
+    },
+  });
+};
+
+export const updateProfile = async (profileData) => {
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+
+  const formData = new FormData();
+  formData.append("id", profileData.userId);
+  formData.append("username", profileData.username);
+  formData.append("bio", profileData.bio);
+
+  return apiClient.put(`/profile`, formData, {
+    headers: {
+      Authorization: `${token}`,
     },
   });
 };
@@ -109,7 +126,7 @@ export const followUser = async (userId, targetId) => {
 export const unfollowUser = async (userId, targetId) => {
   const token =
     localStorage.getItem("token") || sessionStorage.getItem("token");
-  return apiClient.delete(`/follow/${userId}?targetId=${targetId}`, null, {
+  return apiClient.delete(`/follow/${userId}?targetId=${targetId}`, {
     headers: { Authorization: `${token}` },
   });
 };

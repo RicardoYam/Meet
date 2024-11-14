@@ -13,14 +13,44 @@ import Image from "@tiptap/extension-image";
 import "./CreatePost.css";
 import { TextField, Button, Autocomplete } from "@mui/material";
 import { getTags, getCategories, createPost } from "../api/blog";
+import Strike from "@tiptap/extension-strike";
+import { markPasteRule } from "@tiptap/core";
+import HardBreak from "@tiptap/extension-hard-break";
+import ImageResize from "tiptap-extension-resize-image";
+
+const pasteRegex = /(?:^|\s)((?:~)((?:[^~]+))(?:~))/g;
+
+const CustomStrike = Strike.extend({
+  addPasteRules() {
+    return [
+      markPasteRule({
+        find: pasteRegex,
+        type: this.type,
+      }),
+    ];
+  },
+});
+
 const extensions = [
-  StarterKit,
+  StarterKit.configure({
+    strike: false,
+    heading: false,
+  }),
   Superscript,
   Code,
   TextAlign.configure({
     types: ["heading", "paragraph"],
   }),
   Image,
+  CustomStrike,
+  HardBreak.extend({
+    addKeyboardShortcuts() {
+      return {
+        Enter: () => this.editor.commands.setHardBreak(),
+      };
+    },
+  }),
+  ImageResize,
 ];
 
 const content = "";
@@ -59,75 +89,25 @@ const MenuBar = () => {
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={editor.isActive("bold") ? "is-active" : ""}
         >
-          <i className="fas fa-bold"></i>
+          <i className="fa-solid fa-bold"></i>
         </button>
         <button
           onClick={() => editor.chain().focus().toggleItalic().run()}
           className={editor.isActive("italic") ? "is-active" : ""}
         >
-          <i className="fas fa-italic"></i>
+          <i className="fa-solid fa-italic"></i>
         </button>
         <button
           onClick={() => editor.chain().focus().toggleStrike().run()}
           className={editor.isActive("strike") ? "is-active" : ""}
         >
-          <i className="fas fa-strikethrough"></i>
+          <i className="fa-solid fa-strikethrough"></i>
         </button>
         <button
           onClick={() => editor.chain().focus().toggleSuperscript().run()}
           className={editor.isActive("superscript") ? "is-active" : ""}
         >
-          <i className="fas fa-superscript"></i>
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 1 }).run()
-          }
-          className={
-            editor.isActive("heading", { level: 1 }) ? "is-active" : ""
-          }
-        >
-          H1
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-          className={
-            editor.isActive("heading", { level: 2 }) ? "is-active" : ""
-          }
-        >
-          H2
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
-          className={
-            editor.isActive("heading", { level: 3 }) ? "is-active" : ""
-          }
-        >
-          H3
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 4 }).run()
-          }
-          className={
-            editor.isActive("heading", { level: 4 }) ? "is-active" : ""
-          }
-        >
-          H4
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 5 }).run()
-          }
-          className={
-            editor.isActive("heading", { level: 5 }) ? "is-active" : ""
-          }
-        >
-          H5
+          <i className="fa-solid fa-superscript"></i>
         </button>
       </div>
 
@@ -136,41 +116,41 @@ const MenuBar = () => {
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           className={editor.isActive("bulletList") ? "is-active" : ""}
         >
-          <i className="fas fa-list-ul"></i>
+          <i className="fa-solid fa-list-ul"></i>
         </button>
         <button
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           className={editor.isActive("orderedList") ? "is-active" : ""}
         >
-          <i className="fas fa-list-ol"></i>
+          <i className="fa-solid fa-list-ol"></i>
         </button>
       </div>
       <div className="menu-bar-buttons">
         <button onClick={() => editor.chain().focus().toggleCode().run()}>
-          <i className="fas fa-code"></i>
+          <i className="fa-solid fa-code"></i>
         </button>
         <button
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           className={editor.isActive("codeBlock") ? "is-active" : ""}
         >
-          <i className="fas fa-file-code"></i>
+          <i className="fa-solid fa-file-code"></i>
         </button>
         <button
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           className={editor.isActive("blockquote") ? "is-active" : ""}
         >
-          <i className="fas fa-quote-left"></i>
+          <i className="fa-solid fa-quote-left"></i>
         </button>
         <button
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           className={editor.isActive("horizontalRule") ? "is-active" : ""}
         >
-          <i className="fas fa-minus"></i>
+          <i className="fa-solid fa-minus"></i>
         </button>
       </div>
       <div className="menu-bar-buttons">
         <button onClick={addImage} title="Add image">
-          <i className="fas fa-image"></i>
+          <i className="fa-solid fa-image"></i>
         </button>
         <input
           type="file"
@@ -185,7 +165,7 @@ const MenuBar = () => {
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
           className={editor.isActive({ textAlign: "left" }) ? "is-active" : ""}
         >
-          <i className="fas fa-align-left"></i>
+          <i className="fa-solid fa-align-left"></i>
         </button>
         <button
           onClick={() => editor.chain().focus().setTextAlign("center").run()}
@@ -193,13 +173,13 @@ const MenuBar = () => {
             editor.isActive({ textAlign: "center" }) ? "is-active" : ""
           }
         >
-          <i className="fas fa-align-center"></i>
+          <i className="fa-solid fa-align-center"></i>
         </button>
         <button
           onClick={() => editor.chain().focus().setTextAlign("right").run()}
           className={editor.isActive({ textAlign: "right" }) ? "is-active" : ""}
         >
-          <i className="fas fa-align-right"></i>
+          <i className="fa-solid fa-align-right"></i>
         </button>
         <button
           onClick={() => editor.chain().focus().setTextAlign("justify").run()}
@@ -207,7 +187,7 @@ const MenuBar = () => {
             editor.isActive({ textAlign: "justify" }) ? "is-active" : ""
           }
         >
-          <i className="fas fa-align-justify"></i>
+          <i className="fa-solid fa-align-justify"></i>
         </button>
       </div>
     </div>

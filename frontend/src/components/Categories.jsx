@@ -111,13 +111,6 @@ function Categories() {
               >
                 {category.description || `Explore ${category.title} content`}
               </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 0.5, display: "block" }}
-              >
-                {category.followersCount || 0} followers
-              </Typography>
             </Box>
 
             <Button

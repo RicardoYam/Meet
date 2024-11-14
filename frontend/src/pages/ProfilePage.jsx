@@ -10,12 +10,27 @@ import {
   Divider,
   Chip,
   Button,
+  CircularProgress,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from "@mui/material";
 import PostCard from "../components/PostCard";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EditIcon from "@mui/icons-material/Edit";
-import { getProfile, updateAvatar, updateBanner } from "../api/user";
+import {
+  getProfile,
+  updateAvatar,
+  updateBanner,
+  followUser,
+  unfollowUser,
+  updateProfile,
+} from "../api/user";
 
 const generateRandomGradient = () => {
   const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8"];
@@ -34,6 +49,13 @@ const ProfilePage = () => {
   const [bannerUrl, setBannerUrl] = useState(null);
   const navigate = useNavigate();
   const bannerInputRef = useRef(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    username: "",
+    bio: "",
+  });
 
   const currentUsername =
     localStorage.getItem("username") || sessionStorage.getItem("username");
@@ -47,14 +69,38 @@ const ProfilePage = () => {
 
     const fetchProfile = async () => {
       try {
-        const response = await getProfile(targetUsername);
-        if (response.status === 200) {
-          setUserProfile(response.data);
-          setAvatarUrl(
-            response.data.avatar ||
-              `https://ui-avatars.com/api/?name=${response.data.name}&background=4284f5&color=fff`
-          );
-          setBannerUrl(response.data.banner);
+        if (currentUsername && !isCurrentUser) {
+          const [profileResponse, currentUserResponse] = await Promise.all([
+            getProfile(targetUsername),
+            getProfile(currentUsername),
+          ]);
+
+          if (profileResponse.status === 200) {
+            setUserProfile(profileResponse.data);
+            setAvatarUrl(
+              profileResponse.data.avatar ||
+                `https://ui-avatars.com/api/?name=${profileResponse.data.name}&background=4284f5&color=fff`
+            );
+            setBannerUrl(profileResponse.data.banner);
+
+            if (currentUserResponse?.data) {
+              const following = currentUserResponse.data.following || [];
+              setIsFollowing(
+                following.some((user) => user.id === profileResponse.data.id)
+              );
+            }
+          }
+        } else {
+          const profileResponse = await getProfile(targetUsername);
+
+          if (profileResponse.status === 200) {
+            setUserProfile(profileResponse.data);
+            setAvatarUrl(
+              profileResponse.data.avatar ||
+                `https://ui-avatars.com/api/?name=${profileResponse.data.name}&background=4284f5&color=fff`
+            );
+            setBannerUrl(profileResponse.data.banner);
+          }
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -66,7 +112,7 @@ const ProfilePage = () => {
     if (targetUsername) {
       fetchProfile();
     }
-  }, [targetUsername]);
+  }, [targetUsername, currentUsername, isCurrentUser]);
 
   const handleAvatarClick = () => {
     if (isCurrentUser) {
@@ -107,6 +153,72 @@ const ProfilePage = () => {
       } catch (error) {
         console.error("Error updating banner:", error);
       }
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    const currentUserId =
+      localStorage.getItem("id") || sessionStorage.getItem("id");
+
+    try {
+      if (isFollowing) {
+        await unfollowUser(currentUserId, userProfile.id);
+        setIsFollowing(false);
+      } else {
+        await followUser(currentUserId, userProfile.id);
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+    }
+  };
+
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEditClick = () => {
+    setEditFormData({
+      username: userProfile.name,
+      bio: userProfile.bio || "",
+    });
+    setOpenEditDialog(true);
+    handleMenuClose();
+  };
+
+  const handleEditClose = () => {
+    setOpenEditDialog(false);
+  };
+
+  const handleFormChange = (event) => {
+    setEditFormData({
+      ...editFormData,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const response = await updateProfile({
+        userId: sessionStorage.getItem("id") || localStorage.getItem("id"),
+        username: editFormData.username,
+        bio: editFormData.bio,
+      });
+
+      if (response.status === 200) {
+        setUserProfile({
+          ...userProfile,
+          name: editFormData.username,
+          bio: editFormData.bio,
+        });
+        handleEditClose();
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
     }
   };
 
@@ -222,9 +334,32 @@ const ProfilePage = () => {
                 </Typography>
               </Box>
 
-              <IconButton>
-                <MoreHorizIcon />
-              </IconButton>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                {!isCurrentUser && currentUsername && (
+                  <Button
+                    variant="outlined"
+                    onClick={handleFollowToggle}
+                    sx={{
+                      borderRadius: "20px",
+                      textTransform: "none",
+                      minWidth: "100px",
+                      color: "#9333ea",
+                      borderColor: "#9333ea",
+                      "&:hover": {
+                        borderColor: "#891fed",
+                        backgroundColor: "#f5d7fc",
+                      },
+                    }}
+                  >
+                    {isFollowing ? "Following" : "+ Follow"}
+                  </Button>
+                )}
+                {isCurrentUser && (
+                  <IconButton onClick={handleMenuClick}>
+                    <MoreHorizIcon />
+                  </IconButton>
+                )}
+              </Box>
             </Box>
 
             {isCurrentUser && (
@@ -257,68 +392,101 @@ const ProfilePage = () => {
                 Oops, no bio written
               </Typography>
             )}
-            <Box sx={{ mt: 3, display: "flex", alignItems: "center", gap: 1 }}>
-              <CalendarTodayIcon fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
-                Joined{" "}
-                {new Date(userProfile.createdTime).toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </Typography>
+
+            <Box sx={{ mt: 3, display: "flex", alignItems: "center", gap: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <Typography variant="body2" fontWeight="bold">
+                  {userProfile.follower?.length || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  followers
+                </Typography>
+              </Box>
+              <Typography color="text.secondary">|</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <Typography variant="body2" fontWeight="bold">
+                  {userProfile.following?.length || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  following
+                </Typography>
+              </Box>
+              <Typography color="text.secondary">|</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <CalendarTodayIcon fontSize="small" color="action" />
+                <Typography variant="body2" color="text.secondary">
+                  Joined{" "}
+                  {new Date(userProfile.createdTime).toLocaleDateString(
+                    "en-US",
+                    {
+                      month: "long",
+                      year: "numeric",
+                    }
+                  )}
+                </Typography>
+              </Box>
             </Box>
           </Box>
 
-          <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
-            <Box
-              sx={{
-                backgroundColor: "#f3f0ff",
-                borderRadius: "12px",
-                p: 2,
-                textAlign: "center",
-                minWidth: "100px",
-              }}
-            >
-              <Typography variant="h6" color="primary" fontWeight="bold">
-                {userProfile.totalUpVotes}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Likes
-              </Typography>
-            </Box>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+            }}
+          >
+            <Box sx={{ display: "flex", gap: 2, width: "100%" }}>
+              <Box
+                sx={{
+                  backgroundColor: "#f3f0ff",
+                  borderRadius: "12px",
+                  p: 2,
+                  textAlign: "center",
+                  minWidth: "100px",
+                }}
+              >
+                <Typography variant="h6" color="primary" fontWeight="bold">
+                  {userProfile.totalUpVotes}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Likes
+                </Typography>
+              </Box>
 
-            <Box
-              sx={{
-                backgroundColor: "#e8f4ff",
-                borderRadius: "12px",
-                p: 2,
-                textAlign: "center",
-                minWidth: "100px",
-              }}
-            >
-              <Typography variant="h6" color="primary" fontWeight="bold">
-                {userProfile.totalComments}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Comments
-              </Typography>
-            </Box>
+              <Box
+                sx={{
+                  backgroundColor: "#e8f4ff",
+                  borderRadius: "12px",
+                  p: 2,
+                  textAlign: "center",
+                  minWidth: "100px",
+                }}
+              >
+                <Typography variant="h6" color="primary" fontWeight="bold">
+                  {userProfile.totalComments}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Comments
+                </Typography>
+              </Box>
 
-            <Box
-              sx={{
-                backgroundColor: "#e6fffa",
-                borderRadius: "12px",
-                p: 2,
-                textAlign: "center",
-                minWidth: "100px",
-              }}
-            >
-              <Typography variant="h6" color="primary" fontWeight="bold">
-                {userProfile.blogs?.length || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Posts
-              </Typography>
+              <Box
+                sx={{
+                  backgroundColor: "#e6fffa",
+                  borderRadius: "12px",
+                  p: 2,
+                  textAlign: "center",
+                  minWidth: "100px",
+                }}
+              >
+                <Typography variant="h6" color="primary" fontWeight="bold">
+                  {userProfile.blogs?.length || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Posts
+                </Typography>
+              </Box>
             </Box>
           </Box>
         </Box>
@@ -329,27 +497,97 @@ const ProfilePage = () => {
           <Typography variant="h5" fontWeight="bold" mb={2}>
             Posts
           </Typography>
-          {userProfile.blogs?.map((post, index) => (
-            <React.Fragment key={post.id}>
-              <PostCard
-                id={post.id}
-                title={post.title}
-                content={post.content}
-                author={userProfile.name}
-                avatar={userProfile.avatar}
-                categories={post.categories}
-                tags={post.tags}
-                upVotes={post.upVotes}
-                comments={post.comments}
-                createdTime={post.createdTime}
-              />
-              {index < userProfile.blogs.length - 1 && (
-                <Divider sx={{ my: 4 }} />
-              )}
-            </React.Fragment>
-          ))}
+
+          {loading ? (
+            // Loading animation
+            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : userProfile.blogs?.length > 0 ? (
+            // Posts content
+            userProfile.blogs.map((post, index) => (
+              <React.Fragment key={post.id}>
+                <PostCard
+                  id={post.id}
+                  title={post.title}
+                  content={post.content}
+                  author={userProfile.name}
+                  avatar={userProfile.avatar}
+                  categories={post.categories}
+                  tags={post.tags}
+                  upVotes={post.upVotes}
+                  comments={post.comments}
+                  createdTime={post.createdTime}
+                />
+                {index < userProfile.blogs.length - 1 && (
+                  <Divider sx={{ my: 4 }} />
+                )}
+              </React.Fragment>
+            ))
+          ) : (
+            // No content message
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                py: 4,
+                color: "text.secondary",
+                backgroundColor: "#f5f5f5",
+                borderRadius: 2,
+              }}
+            >
+              <Typography>No posts yet</Typography>
+            </Box>
+          )}
         </Box>
       </Box>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        {isCurrentUser && (
+          <MenuItem onClick={handleEditClick}>Edit Profile</MenuItem>
+        )}
+      </Menu>
+
+      <Dialog open={openEditDialog} onClose={handleEditClose}>
+        <DialogTitle>Edit Profile</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            name="username"
+            label="Username"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={editFormData.username}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            name="bio"
+            label="Bio"
+            type="text"
+            fullWidth
+            variant="outlined"
+            multiline
+            rows={4}
+            value={editFormData.bio}
+            onChange={handleFormChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditClose}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

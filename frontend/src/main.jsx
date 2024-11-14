@@ -16,8 +16,8 @@ import CreatePost from "./pages/CreatePost";
 import PostPage from "./pages/PostPage";
 import Categories from "./components/Categories";
 import Topics from "./components/Topics";
-import "@fortawesome/fontawesome-free/css/all.min.css";
 import Collection from "./pages/Collection";
+import OauthSignup from "./pages/OauthSignup";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -36,6 +36,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="/topics" element={<Topics />} />
           <Route path="/category/:title" element={<Collection />} />
           <Route path="/tag/:title" element={<Collection />} />
+          <Route path="/oauth-signup" element={<OauthSignup />} />
         </Routes>
       </Layout>
     </BrowserRouter>

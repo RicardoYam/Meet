@@ -12,6 +12,14 @@ export const signup = (username, email, password) => {
   });
 };
 
+export const oauthSignup = (username, email, password, token) => {
+  return apiClient.post(`/oauth-register?token=${token}`, {
+    username,
+    email,
+    password,
+  });
+};
+
 export const sendVerificationCode = (email) => {
   return apiClient.get(`/reset-password?email=${encodeURIComponent(email)}`);
 };

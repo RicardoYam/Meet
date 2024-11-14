@@ -6,9 +6,12 @@ import { useLocation } from "react-router-dom";
 
 function Layout({ children }) {
   const location = useLocation();
-  const isAuthPage = ["/login", "/signup", "/forgot-password"].includes(
-    location.pathname
-  );
+  const isAuthPage = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/oauth-signup",
+  ].includes(location.pathname);
 
   if (isAuthPage) {
     return <>{children}</>;

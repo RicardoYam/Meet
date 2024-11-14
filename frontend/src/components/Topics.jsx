@@ -111,13 +111,6 @@ function Topics() {
               >
                 {topic.description || `Explore content about ${topic.title}`}
               </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 0.5, display: "block" }}
-              >
-                {topic.followersCount || 0} followers
-              </Typography>
             </Box>
 
             <Button

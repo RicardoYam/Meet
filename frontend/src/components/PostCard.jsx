@@ -254,7 +254,7 @@ const PostCard = ({
                   sx={{ fontSize: 18, mr: 0.5, color: "text.secondary" }}
                 />
                 <Typography variant="body2" color="text.secondary">
-                  {comments?.length || 0}
+                  {Array.isArray(comments) ? comments.length : comments}
                 </Typography>
               </Box>
             </Box>

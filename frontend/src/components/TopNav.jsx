@@ -15,12 +15,8 @@ import {
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import SearchIcon from "@mui/icons-material/Search";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import Avatar from "@mui/material/Avatar";
-import StoreIcon from "@mui/icons-material/Store";
-import DescriptionIcon from "@mui/icons-material/Description";
-import SettingsIcon from "@mui/icons-material/Settings";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import { getProfile } from "../api/user";
 import { getPostsBySearchTerm } from "../api/blog";
@@ -32,6 +28,8 @@ function TopNav() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchTimeout, setSearchTimeout] = useState(null);
+  const [searchAnchorEl, setSearchAnchorEl] = useState(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
 
   useEffect(() => {
     const username =
@@ -54,11 +52,11 @@ function TopNav() {
   };
 
   const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
+    setMenuAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = () => {
-    setAnchorEl(null);
+    setMenuAnchorEl(null);
   };
 
   const handleLogout = () => {
@@ -77,7 +75,7 @@ function TopNav() {
   const handleSearch = async (event) => {
     const value = event.target.value;
     setSearchTerm(value);
-    setAnchorEl(event.currentTarget);
+    setSearchAnchorEl(event.currentTarget);
 
     if (searchTimeout) {
       clearTimeout(searchTimeout);
@@ -102,7 +100,7 @@ function TopNav() {
   };
 
   const handleCloseSearch = () => {
-    setAnchorEl(null);
+    setSearchAnchorEl(null);
     setSearchResults([]);
   };
 
@@ -131,6 +129,10 @@ function TopNav() {
             component={Link}
             to="/"
             className="text-black font-bold mr-4 no-underline"
+            sx={{
+              fontFamily: "Fleur De Leah !important",
+              fontSize: "30px",
+            }}
           >
             Meet
           </Typography>
@@ -162,8 +164,8 @@ function TopNav() {
             />
 
             <Popover
-              open={Boolean(anchorEl) && searchResults?.length > 0}
-              anchorEl={anchorEl}
+              open={Boolean(searchAnchorEl) && searchResults?.length > 0}
+              anchorEl={searchAnchorEl}
               onClose={handleCloseSearch}
               anchorOrigin={{
                 vertical: "bottom",
@@ -175,11 +177,15 @@ function TopNav() {
               }}
               PaperProps={{
                 sx: {
-                  width: { xs: "60%", sm: "70%", md: "50%" },
+                  width: searchAnchorEl?.offsetWidth || "auto",
                   mt: 1,
                   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                   borderRadius: "10px",
                   position: "fixed",
+                  left: searchAnchorEl
+                    ? searchAnchorEl.getBoundingClientRect().left
+                    : "auto",
+                  maxWidth: { xs: "90%", sm: "70%", md: "50%" },
                 },
               }}
             >
@@ -222,12 +228,9 @@ function TopNav() {
         <Box className="flex items-center">
           {userProfile ? (
             <>
-              <IconButton color="inherit">
-                <MailOutlineIcon />
-              </IconButton>
-              <IconButton color="inherit">
+              {/* <IconButton color="inherit">
                 <NotificationsNoneIcon />
-              </IconButton>
+              </IconButton> */}
               <IconButton color="inherit" onClick={handleMenuOpen}>
                 <Avatar
                   alt={userProfile.name}
@@ -238,8 +241,8 @@ function TopNav() {
                 />
               </IconButton>
               <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
+                anchorEl={menuAnchorEl}
+                open={Boolean(menuAnchorEl)}
                 onClose={handleMenuClose}
                 PaperProps={{
                   elevation: 0,

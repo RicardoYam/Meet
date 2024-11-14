@@ -1,15 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Typography, Button, TextField, Box } from "@mui/material";
+import { Typography, Button, TextField, Box, Divider } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import loginBanner from "/images/login_banner.jpg";
 import { login } from "../api/login";
 import { FormControlLabel, Checkbox } from "@mui/material";
+import GitHubIcon from "@mui/icons-material/GitHub";
+
 function Login() {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+    const username = urlParams.get("username");
+    const userId = urlParams.get("userId");
+    const email = urlParams.get("email");
+
+    if (token && username && userId && email) {
+      sessionStorage.setItem("token", `Bearer ${token}`);
+      sessionStorage.setItem("username", username);
+      sessionStorage.setItem("id", userId);
+      sessionStorage.setItem("email", email);
+
+      navigate("/");
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,6 +54,10 @@ function Login() {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const handleGitHubLogin = () => {
+    window.location.href = "http://localhost:8080/oauth2/authorization/github";
   };
 
   return (
@@ -75,6 +98,7 @@ function Login() {
                 required
                 placeholder="Enter your password"
               />
+
               <div className="flex justify-between items-center">
                 <FormControlLabel
                   control={
@@ -99,6 +123,41 @@ function Login() {
                 className="bg-purple-600 text-white hover:bg-purple-800 normal-case py-3"
               >
                 Log in
+              </Button>
+
+              {/* Divider with text */}
+              <Box sx={{ display: "flex", alignItems: "center", my: 2 }}>
+                <Divider sx={{ flex: 1 }} />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ px: 2 }}
+                >
+                  Or continue with
+                </Typography>
+                <Divider sx={{ flex: 1 }} />
+              </Box>
+
+              {/* GitHub button */}
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={handleGitHubLogin}
+                sx={{
+                  py: 1.5,
+                  color: "#24292e",
+                  borderColor: "#24292e",
+                  "&:hover": {
+                    borderColor: "#24292e",
+                    backgroundColor: "rgba(36, 41, 46, 0.04)",
+                  },
+                  display: "flex",
+                  gap: 2,
+                  textTransform: "none",
+                }}
+                startIcon={<GitHubIcon />}
+              >
+                GitHub
               </Button>
             </form>
 

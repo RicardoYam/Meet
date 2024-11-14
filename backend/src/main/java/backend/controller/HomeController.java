@@ -6,10 +6,13 @@ import backend.repository.UserRepository;
 import backend.repository.VerificationRepository;
 import backend.security.JWTGenerator;
 import backend.service.HomeService;
+import backend.util.Utils;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -91,6 +94,36 @@ public class HomeController {
 
         try {
             if (homeService.createUser(userDTO)) {
+                return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
+            }
+            return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @PostMapping("/oauth-register")
+    public ResponseEntity<?> oauthRegister(@RequestBody UserDTO userDTO, @RequestParam String token) {
+        if (userDTO.getUsername() == null || userDTO.getPassword() == null || userDTO.getEmail() == null) {
+            return new ResponseEntity<>("Password can't be null", HttpStatus.BAD_REQUEST);
+        }
+
+        if (token == null || token.isEmpty()) {
+            return new ResponseEntity<>("Token can't be null", HttpStatus.BAD_REQUEST);
+        }
+
+        if (Utils.isOneTimeTokenExpired(token)) {
+            return new ResponseEntity<>("Token is expired", HttpStatus.BAD_REQUEST);
+        }
+
+        if (userRepository.existsByUsernameAndPasswordIsNotNull(userDTO.getUsername())) {
+            return new ResponseEntity<>("Username or email address already in use", HttpStatus.CONFLICT);
+        }
+
+        try {
+            if (homeService.completeOauthUserRegistration(userDTO, token)) {
                 return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
             }
             return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
@@ -338,5 +371,11 @@ public class HomeController {
             return new ResponseEntity<>("Password reset successfully", HttpStatus.OK);
         }
         return new ResponseEntity<>("Password not found", HttpStatus.NOT_FOUND);
+    }
+
+
+    @GetMapping("/loginSuccess")
+    public String successLogin() {
+        return "success";
     }
 }

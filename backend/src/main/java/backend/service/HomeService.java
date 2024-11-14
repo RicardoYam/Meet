@@ -7,7 +7,6 @@ import backend.security.JWTGenerator;
 import backend.util.Utils;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,12 +17,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.*;
@@ -62,6 +57,9 @@ public class HomeService {
     @Autowired
     private VerificationRepository verificationRepository;
 
+    @Autowired
+    private OneTimeTokenRepository oneTimeTokenRepository;
+
 
     public boolean createUser(UserDTO userDTO) {
         User user = new User();
@@ -75,6 +73,25 @@ public class HomeService {
 
         userRepository.save(user);
         return true;
+    }
+
+
+    @Transactional
+    public boolean completeOauthUserRegistration(UserDTO userDTO, String token) {
+        if (oneTimeTokenRepository.existsByTokenAndExpiredFalse(token)) {
+            Optional<User> optionalUser = userRepository.findUserByEmail(userDTO.getEmail());
+            if (optionalUser.isPresent()) {
+                User user = optionalUser.get();
+                user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+
+                OneTimeToken byToken = oneTimeTokenRepository.findByToken(token);
+                byToken.setExpired(true);
+                userRepository.save(user);
+                oneTimeTokenRepository.save(byToken);
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -411,4 +428,6 @@ public class HomeService {
 
         mailSender.send(message);
     }
+
+
 }
