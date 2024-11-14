@@ -216,7 +216,7 @@ const PostCard = ({
                   sx={{ fontSize: 18, mr: 0.5, color: "text.secondary" }}
                 />
                 <Typography variant="body2" color="text.secondary">
-                  {Math.ceil(textContent.length / 200)} min read
+                  {Math.ceil(textContent.length / 600)} min read
                 </Typography>
               </Box>
               <Box sx={{ flexGrow: 1 }} />
@@ -254,7 +254,7 @@ const PostCard = ({
                   sx={{ fontSize: 18, mr: 0.5, color: "text.secondary" }}
                 />
                 <Typography variant="body2" color="text.secondary">
-                  {Array.isArray(comments) ? comments.length : comments}
+                  {comments}
                 </Typography>
               </Box>
             </Box>

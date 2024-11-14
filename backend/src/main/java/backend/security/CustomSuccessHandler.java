@@ -6,6 +6,7 @@ import backend.repository.OneTimeTokenRepository;
 import backend.repository.UserRepository;
 import backend.util.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -19,6 +20,10 @@ import java.util.Optional;
 
 @Component
 public class CustomSuccessHandler implements AuthenticationSuccessHandler {
+
+    @Value("${FRONTEND_URL}")
+    private String frontendUrl;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -48,8 +53,8 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
             oneTimeTokenRepository.save(oneTimeToken);
 
             // Redirect to frontend with user information
-            String redirectUrl = String.format("http://localhost:5173/oauth-signup?username=%s&email=%s&token=%s",
-                                                username, email, jwt);
+            String redirectUrl = String.format("%s/oauth-signup?username=%s&email=%s&token=%s",
+                                                frontendUrl, username, email, jwt);
 
 
             response.setStatus(HttpServletResponse.SC_FOUND);

@@ -1,0 +1,35 @@
+services:
+  database:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: meet-password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: meet
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile
+    restart: always
+    environment:
+      DB_URL: jdbc:postgresql://database:5432/meet
+      DB_USERNAME: postgres
+      DB_PASSWORD: meet-password
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend

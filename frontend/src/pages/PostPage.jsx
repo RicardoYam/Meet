@@ -19,6 +19,7 @@ import { ThumbUpOutlined, ThumbUp } from "@mui/icons-material";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import "./PostPage.css";
 import { formatDate, formatRelativeTime } from "../util/utils";
+import "../styles/content.css";
 
 // Move organizeComments outside of any component
 const organizeComments = (comments) => {
@@ -444,7 +445,7 @@ function PostPage() {
 
       {/* Content */}
       <Box
-        className="post-content"
+        className="post-content content-styles"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 

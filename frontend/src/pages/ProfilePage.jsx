@@ -516,7 +516,7 @@ const ProfilePage = () => {
                   categories={post.categories}
                   tags={post.tags}
                   upVotes={post.upVotes}
-                  comments={post.comments}
+                  comments={post.comments.length}
                   createdTime={post.createdTime}
                 />
                 {index < userProfile.blogs.length - 1 && (

@@ -1,4 +1,5 @@
 import apiClient from "./base";
+import axios from "axios";
 
 export const getTags = () => {
   return apiClient.get("/tags");
@@ -104,4 +105,14 @@ export const postComment = async (blogId, commentId, content = null) => {
       },
     }
   );
+};
+
+export const deleteBlog = async (blogId) => {
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+  return await axios.delete(`${API_URL}/api/blogs/${blogId}`, {
+    headers: {
+      Authorization: token,
+    },
+  });
 };

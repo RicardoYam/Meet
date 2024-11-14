@@ -569,7 +569,7 @@ function Home() {
                   categories={post.categories}
                   tags={post.tags}
                   upVotes={post.upVotes}
-                  comments={post.totalComments}
+                  comments={post.comments}
                   createdTime={post.createdTime}
                   votes={post.votes}
                 />

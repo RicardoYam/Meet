@@ -2,6 +2,9 @@
   border-radius: 0 0 10px 10px;
   padding: 10px;
   background-color: #fff;
+}
+
+.tiptap.ProseMirror {
   line-height: 1.5;
 
   ul,
@@ -49,6 +52,47 @@
     border: none;
     border-top: 1px solid #9333ea;
     margin: 2rem 0;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+  }
+
+  h1 {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0.67em 0;
+    display: block;
+  }
+
+  h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0.83em 0;
+    display: block;
+  }
+
+  h3 {
+    font-size: 1.17em;
+    font-weight: bold;
+    margin: 1em 0;
+    display: block;
+  }
+
+  h4 {
+    font-size: 1em;
+    font-weight: bold;
+    margin: 1.33em 0;
+    display: block;
+  }
+
+  h5 {
+    font-size: 0.83em;
+    font-weight: bold;
+    margin: 1.67em 0;
+    display: block;
   }
 }
 
@@ -167,41 +211,3 @@
 .post-button {
   border-radius: 20px !important;
 }
-
-/* Update/Add these styles for headings */
-.ProseMirror h1 {
-  font-size: 2em;
-  font-weight: bold;
-  margin: 0.67em 0;
-  display: block;
-}
-
-.ProseMirror h2 {
-  font-size: 1.5em;
-  font-weight: bold;
-  margin: 0.83em 0;
-  display: block;
-}
-
-.ProseMirror h3 {
-  font-size: 1.17em;
-  font-weight: bold;
-  margin: 1em 0;
-  display: block;
-}
-
-.ProseMirror h4 {
-  font-size: 1em;
-  font-weight: bold;
-  margin: 1.33em 0;
-  display: block;
-}
-
-.ProseMirror h5 {
-  font-size: 0.83em;
-  font-weight: bold;
-  margin: 1.67em 0;
-  display: block;
-}
-
-/* Remove the content-heading related styles as we're using default heading behavior */

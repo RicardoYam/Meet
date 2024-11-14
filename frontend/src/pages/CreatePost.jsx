@@ -34,7 +34,9 @@ const CustomStrike = Strike.extend({
 const extensions = [
   StarterKit.configure({
     strike: false,
-    heading: false,
+    hardBreak: false,
+    code: false,
+    image: false,
   }),
   Superscript,
   Code,
@@ -217,6 +219,7 @@ function CreatePost() {
   }, []);
 
   const handlePost = async () => {
+    console.log(editorContent);
     if (!title.trim()) {
       alert("Please enter a title");
       return;

@@ -25,6 +25,12 @@ function Collection() {
     last: false,
   });
 
+  // Decode the URL parameter for display
+  const decodedTitle = decodeURIComponent(title);
+
+  // Encode special characters for API calls
+  const encodedTitle = decodedTitle.replace(/&/g, "%26");
+
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
@@ -32,8 +38,8 @@ function Collection() {
         const response = await getAllPosts(
           0,
           5,
-          isCategory ? title : null,
-          !isCategory ? title : null
+          isCategory ? encodedTitle : null,
+          !isCategory ? encodedTitle : null
         );
 
         if (response.status === 200) {
@@ -55,7 +61,7 @@ function Collection() {
     };
 
     fetchPosts();
-  }, [title, isCategory]);
+  }, [encodedTitle, isCategory]);
 
   const loadMorePosts = async () => {
     if (!pageInfo.last) {
@@ -63,8 +69,8 @@ function Collection() {
         const response = await getAllPosts(
           pageInfo.number + 1,
           pageInfo.size,
-          isCategory ? title : null,
-          !isCategory ? title : null
+          isCategory ? encodedTitle : null,
+          !isCategory ? encodedTitle : null
         );
 
         if (response.status === 200) {
@@ -100,10 +106,10 @@ function Collection() {
   return (
     <Box className="py-8">
       <Box className="mx-8">
-        {/* Header */}
+        {/* Header - Use decodedTitle for display */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" gutterBottom>
-            <span>{title}</span>
+            <span>{decodedTitle}</span>
           </Typography>
           <Typography variant="body1" color="text.secondary">
             {pageInfo.totalElements} posts

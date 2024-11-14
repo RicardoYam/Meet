@@ -1,0 +1,106 @@
+.content-styles {
+  line-height: 1.5;
+
+  ul,
+  ol {
+    padding: 0 1rem;
+    margin: 1.25rem 1rem 1.25rem 0.4rem;
+
+    li p {
+      margin-top: 0.25em;
+      margin-bottom: 0.25em;
+    }
+  }
+
+  code {
+    background-color: #ededed;
+    border-radius: 0.4rem;
+    color: #000;
+    font-size: 0.85rem;
+    padding: 0.25em 0.3em;
+  }
+
+  pre {
+    background: black;
+    border-radius: 0.5rem;
+    color: white;
+    font-family: "JetBrainsMono", monospace;
+    margin: 1.5rem 0;
+    padding: 0.75rem 1rem;
+
+    code {
+      background: none;
+      color: inherit;
+      font-size: 0.8rem;
+      padding: 0;
+    }
+  }
+
+  blockquote {
+    border-left: 3px solid #9333ea;
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #9333ea;
+    margin: 2rem 0;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+  }
+
+  h1 {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0.67em 0;
+    display: block;
+  }
+
+  h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0.83em 0;
+    display: block;
+  }
+
+  h3 {
+    font-size: 1.17em;
+    font-weight: bold;
+    margin: 1em 0;
+    display: block;
+  }
+
+  h4 {
+    font-size: 1em;
+    font-weight: bold;
+    margin: 1.33em 0;
+    display: block;
+  }
+
+  h5 {
+    font-size: 0.83em;
+    font-weight: bold;
+    margin: 1.67em 0;
+    display: block;
+  }
+
+  & > * {
+    &[style*="text-align: right"] {
+      text-align: right;
+    }
+    &[style*="text-align: center"] {
+      text-align: center;
+    }
+    &[style*="text-align: left"] {
+      text-align: left;
+    }
+    &[style*="text-align: justify"] {
+      text-align: justify;
+    }
+  }
+}

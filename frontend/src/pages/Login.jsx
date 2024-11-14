@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Typography, Button, TextField, Box, Divider } from "@mui/material";
+import {
+  Typography,
+  Button,
+  TextField,
+  Box,
+  Divider,
+  Alert,
+} from "@mui/material";
 import Grid from "@mui/material/Grid";
 import loginBanner from "/images/login_banner.jpg";
 import { login } from "../api/login";
@@ -11,6 +18,7 @@ function Login() {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,27 +40,38 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     try {
       const response = await login(account, password);
-      console.log(response);
-      rememberMe
-        ? (localStorage.setItem(
-            "token",
-            response.data.tokenType + " " + response.data.token
-          ),
-          localStorage.setItem("username", response.data.username),
-          localStorage.setItem("id", response.data.userId),
-          localStorage.setItem("email", response.data.email))
-        : (sessionStorage.setItem(
-            "token",
-            response.data.tokenType + " " + response.data.token
-          ),
-          sessionStorage.setItem("username", response.data.username),
-          sessionStorage.setItem("id", response.data.userId),
-          sessionStorage.setItem("email", response.data.email));
-      navigate("/");
+      if (response.status === 200) {
+        const storage = rememberMe ? localStorage : sessionStorage;
+        storage.setItem(
+          "token",
+          response.data.tokenType + " " + response.data.token
+        );
+        storage.setItem("username", response.data.username);
+        storage.setItem("id", response.data.userId);
+        storage.setItem("email", response.data.email);
+        navigate("/");
+      }
     } catch (error) {
       console.error(error);
+      if (error.response) {
+        switch (error.response.status) {
+          case 401:
+            setError("Invalid username or password");
+            break;
+          case 404:
+            setError("Account not found");
+            break;
+          default:
+            setError("An error occurred during login. Please try again.");
+        }
+      } else if (error.request) {
+        setError("Unable to connect to the server. Please try again later.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -116,6 +135,15 @@ function Login() {
                   Forgot password?
                 </Link>
               </div>
+              {error && (
+                <Alert
+                  severity="error"
+                  sx={{ mb: 2 }}
+                  onClose={() => setError("")}
+                >
+                  {error}
+                </Alert>
+              )}
               <Button
                 type="submit"
                 variant="contained"
