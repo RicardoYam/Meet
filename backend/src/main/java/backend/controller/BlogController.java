@@ -220,10 +220,17 @@ public class BlogController {
                                          @RequestParam(required = false) String tag,
                                          @RequestParam(defaultValue = "createdTime") String sortBy,
                                          @RequestParam(defaultValue = "desc") String sortDir) {
-        Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Pageable pageable;
+        if ("upVotes".equalsIgnoreCase(sortBy)) {
+            Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageable = PageRequest.of(page, size, Sort.unsorted());
+        } else {
+            Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        }
 
-        Page<BlogListResponseDTO> blogs = blogService.getAllBlogs(pageable, category, tag);
+        Page<BlogListResponseDTO> blogs = blogService.getAllBlogs(pageable, category, tag,
+                "upVotes".equalsIgnoreCase(sortBy));
         if (!blogs.hasContent()) {
             return new ResponseEntity<>("No blogs found", HttpStatus.NO_CONTENT);
         }

@@ -7,15 +7,13 @@ import backend.specification.BlogSpecification;
 import backend.util.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -224,19 +222,21 @@ public class BlogService {
 
 
     @Transactional
-    public Page<BlogListResponseDTO> getAllBlogs(Pageable pageable, String category, String tag) {
-        Specification<Blog> specification = Specification.where((root, query, criteriaBuilder) -> criteriaBuilder.conjunction());
-
-        if (category != null && !category.isEmpty()) {
-            specification = specification.and(BlogSpecification.hasCategory(category));
+    public Page<BlogListResponseDTO> getAllBlogs(Pageable pageable, String category, String tag, boolean sortByVotes) {
+        if (sortByVotes) {
+            Page<Blog> blogs = blogRepository.findAllOrderByVotes(pageable);
+            return blogs.map(this::convertBlogToDTO);
+        } else {
+            Specification<Blog> specification = Specification.where((root, query, criteriaBuilder) -> criteriaBuilder.conjunction());
+            if (category != null && !category.isEmpty()) {
+                specification = specification.and(BlogSpecification.hasCategory(category));
+            }
+            if (tag != null && !tag.isEmpty()) {
+                specification = specification.and(BlogSpecification.hasTag(tag));
+            }
+            Page<Blog> blogs = blogRepository.findAll(specification, pageable);
+            return blogs.map(this::convertBlogToDTO);
         }
-
-        if (tag != null && !tag.isEmpty()) {
-            specification = specification.and(BlogSpecification.hasTag(tag));
-        }
-
-        Page<Blog> blogPage = blogRepository.findAll(specification, pageable);
-        return blogPage.map(this::convertBlogToDTO);
     }
 
 

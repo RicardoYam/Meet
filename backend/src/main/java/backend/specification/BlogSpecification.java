@@ -6,14 +6,16 @@ import backend.entity.Tag;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 
 public class BlogSpecification {
     public static Specification<Blog> hasCategory(String categoryTitle) {
         return (root, query, criteriaBuilder) -> {
             if (categoryTitle == null || categoryTitle.isEmpty()) {
-                return null;
+                return null; // No filter applied if categoryTitle is null or empty
             }
-            Join<Blog, Category> categoryJoin = root.join("categories");
+            query.distinct(true); // Ensure distinct results
+            Join<Blog, Category> categoryJoin = root.join("categories", JoinType.INNER);
             return criteriaBuilder.equal(categoryJoin.get("title"), categoryTitle);
         };
     }
@@ -22,9 +24,10 @@ public class BlogSpecification {
     public static Specification<Blog> hasTag(String tagTitle) {
         return (root, query, criteriaBuilder) -> {
             if (tagTitle == null || tagTitle.isEmpty()) {
-                return null;
+                return null; // No filter applied if tagTitle is null or empty
             }
-            Join<Blog, Tag> tagJoin = root.join("tags");
+            query.distinct(true); // Ensure distinct results
+            Join<Blog, Tag> tagJoin = root.join("tags", JoinType.INNER);
             return criteriaBuilder.equal(tagJoin.get("title"), tagTitle);
         };
     }

@@ -8,6 +8,7 @@ import {
   Divider,
   Chip,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import PostCard from "./PostCard";
 import { useNavigate } from "react-router-dom";
@@ -461,53 +462,75 @@ function Home() {
   });
   const [currentUser, setCurrentUser] = useState(null);
   const [sortBy, setSortBy] = useState("Newest");
+  const [loading, setLoading] = useState(true);
 
   const sortOptions = {
     Newest: { sortBy: "createdTime", sortDir: "desc" },
     Oldest: { sortBy: "createdTime", sortDir: "asc" },
-    "Most Liked": { sortBy: "votes", sortDir: "asc" },
+    "Most Liked": { sortBy: "upVotes", sortDir: "asc" },
   };
 
   useEffect(() => {
-    const { sortBy: apiSortBy, sortDir } = sortOptions[sortBy];
-    getAllPosts(0, 5, null, null, apiSortBy, sortDir).then((response) => {
-      if (response.status === 200) {
-        const data = response.data;
-        setPosts(data.content);
-        setPageInfo({
-          number: data.number,
-          size: data.size,
-          totalPages: data.totalPages,
-          totalElements: data.totalElements,
-          last: data.last,
-        });
-      }
-    });
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const { sortBy: apiSortBy, sortDir } = sortOptions[sortBy];
+        const postsResponse = await getAllPosts(
+          0,
+          5,
+          null,
+          null,
+          apiSortBy,
+          sortDir
+        );
+        if (postsResponse.status === 200) {
+          const data = postsResponse.data;
+          setPosts(data.content);
+          setPageInfo({
+            number: data.number,
+            size: data.size,
+            totalPages: data.totalPages,
+            totalElements: data.totalElements,
+            last: data.last,
+          });
+        }
 
-    getProfile(
-      localStorage.getItem("username") || sessionStorage.getItem("username")
-    ).then((response) => {
-      if (response.status === 200) {
-        setCurrentUser(response.data);
+        const username =
+          localStorage.getItem("username") ||
+          sessionStorage.getItem("username");
+        if (username) {
+          const profileResponse = await getProfile(username);
+          if (profileResponse.status === 200) {
+            setCurrentUser(profileResponse.data);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
-    });
+    };
+
+    fetchData();
   }, [sortBy]);
 
   const handleSortChange = (event) => {
     setSortBy(event.target.value);
   };
 
-  const loadMorePosts = () => {
+  const loadMorePosts = async () => {
     if (!pageInfo.last) {
-      const { sortBy: apiSortBy, sortDir } = sortOptions[sortBy];
-      getAllPosts(
-        pageInfo.number + 1,
-        pageInfo.size,
-        null,
-        null,
-        apiSortBy,
-        sortDir
-      ).then((response) => {
+      setLoading(true);
+      try {
+        const { sortBy: apiSortBy, sortDir } = sortOptions[sortBy];
+        const response = await getAllPosts(
+          pageInfo.number + 1,
+          pageInfo.size,
+          null,
+          null,
+          apiSortBy,
+          sortDir
+        );
         if (response.status === 200) {
           const data = response.data;
           setPosts((prevPosts) => [...prevPosts, ...data.content]);
@@ -519,107 +542,124 @@ function Home() {
             last: data.last,
           });
         }
-      });
+      } catch (error) {
+        console.error("Error loading more posts:", error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   return (
     <Box>
-      <Box className="flex flex-col md:flex-row">
-        {posts?.length > 0 ? (
-          <Box
-            className="w-full mx-8 md:w-3/4"
-            sx={{
-              borderRight: "1px solid #eee",
-              pr: 3,
-            }}
-          >
-            <Box className="flex justify-between items-center align-middle mt-4">
-              <Typography variant="h6">Articles</Typography>
-              <Select
-                value={sortBy}
-                onChange={handleSortChange}
-                sx={{
-                  width: "120px",
-                  height: "40px",
-                  borderRadius: "20px",
-                  fontSize: "14px",
-                }}
-              >
-                {Object.keys(sortOptions).map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Box>
+      {loading ? (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "50vh",
+          }}
+        >
+          <CircularProgress sx={{ color: "#9333ea" }} />
+        </Box>
+      ) : (
+        <Box className="flex flex-col md:flex-row">
+          {posts?.length > 0 ? (
+            <Box
+              className="w-full mx-8 md:w-3/4"
+              sx={{
+                borderRight: "1px solid #eee",
+                pr: 3,
+              }}
+            >
+              <Box className="flex justify-between items-center align-middle mt-4">
+                <Typography variant="h6">Articles</Typography>
+                <Select
+                  value={sortBy}
+                  onChange={handleSortChange}
+                  sx={{
+                    width: "120px",
+                    height: "40px",
+                    borderRadius: "20px",
+                    fontSize: "14px",
+                  }}
+                >
+                  {Object.keys(sortOptions).map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Box>
 
-            <Divider
-              sx={{ mt: 2, mb: 4, borderColor: "#ececee", borderWidth: 1 }}
-            />
+              <Divider
+                sx={{ mt: 2, mb: 4, borderColor: "#ececee", borderWidth: 1 }}
+              />
 
-            {posts.map((post, index) => (
-              <React.Fragment key={post.id}>
-                <PostCard
-                  id={post.id}
-                  title={post.title}
-                  content={post.content}
-                  author={post.author}
-                  avatar={post.avatar}
-                  categories={post.categories}
-                  tags={post.tags}
-                  upVotes={post.upVotes}
-                  comments={post.comments}
-                  createdTime={post.createdTime}
-                  votes={post.votes}
-                />
-                {index < posts.length - 1 && (
-                  <Divider
-                    sx={{ my: 4, borderColor: "#ececee", borderWidth: 1 }}
+              {posts.map((post, index) => (
+                <React.Fragment key={post.id}>
+                  <PostCard
+                    id={post.id}
+                    title={post.title}
+                    content={post.content}
+                    author={post.author}
+                    avatar={post.avatar}
+                    categories={post.categories}
+                    tags={post.tags}
+                    upVotes={post.upVotes}
+                    comments={post.comments}
+                    createdTime={post.createdTime}
+                    votes={post.votes}
                   />
+                  {index < posts.length - 1 && (
+                    <Divider
+                      sx={{ my: 4, borderColor: "#ececee", borderWidth: 1 }}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+              {!pageInfo.last && (
+                <Button
+                  variant="contained"
+                  onClick={loadMorePosts}
+                  className="mt-4 mb-4 bg-purple-600 hover:bg-purple-700"
+                  fullWidth
+                >
+                  Load More
+                </Button>
+              )}
+            </Box>
+          ) : (
+            <Box className="w-full md:w-3/4 p-4">
+              <Typography variant="h6">No posts found</Typography>
+            </Box>
+          )}
+
+          <Box className="w-full pr-8 md:w-1/4 mt-4 md:mt-0">
+            {currentUser ? (
+              <>
+                <UserProfile
+                  username={currentUser.name}
+                  avatar={currentUser.avatar}
+                  likes={currentUser.totalUpVotes}
+                  comments={currentUser.totalComments}
+                  posts={currentUser.blogs?.length || 0}
+                  bio={currentUser.bio}
+                />
+                {currentUser.tags?.length > 0 && (
+                  <TopicsCard topics={currentUser.tags} />
                 )}
-              </React.Fragment>
-            ))}
-            {!pageInfo.last && (
-              <Button
-                variant="contained"
-                onClick={loadMorePosts}
-                className="mt-4 mb-4 bg-purple-600 hover:bg-purple-700"
-                fullWidth
-              >
-                Load More
-              </Button>
+                {currentUser.following?.length > 0 && (
+                  <FollowingCard following={currentUser.following} />
+                )}
+              </>
+            ) : (
+              <LoginPromptCard />
             )}
           </Box>
-        ) : (
-          <Box className="w-full md:w-3/4">
-            <Typography variant="h6">No posts found</Typography>
-          </Box>
-        )}
-
-        <Box className="w-full pr-8 md:w-1/4 mt-4 md:mt-0">
-          {currentUser ? (
-            <>
-              <UserProfile
-                username={currentUser.name}
-                avatar={currentUser.avatar}
-                likes={currentUser.totalUpVotes}
-                comments={currentUser.totalComments}
-                posts={currentUser.blogs?.length || 0}
-                bio={currentUser.bio}
-              />
-              {currentUser.tags?.length > 0 && (
-                <TopicsCard topics={currentUser.tags} />
-              )}
-              {currentUser.following?.length > 0 && (
-                <FollowingCard following={currentUser.following} />
-              )}
-            </>
-          ) : (
-            <LoginPromptCard />
-          )}
         </Box>
-      </Box>
+      )}
     </Box>
   );
 }
