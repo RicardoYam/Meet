@@ -6,8 +6,8 @@ services:
       POSTGRES_PASSWORD: meet-password
       POSTGRES_USER: postgres
       POSTGRES_DB: meet
-    volumes:
-      - ./initdb:/docker-entrypoint-initdb.d
+    # volumes:
+    #   - ./initdb:/docker-entrypoint-initdb.d
 
   backend:
     build:
